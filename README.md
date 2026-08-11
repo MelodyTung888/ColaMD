@@ -69,6 +69,14 @@ ColaMD is intentionally simple:
 
 One thing, done well.
 
+## Themes
+
+Twelve built-in themes — six light, six dark — inspired by Bear, Notion, iA Writer, Kindle, Solarized, Nord, Gruvbox, and Dracula.
+
+<p align="center">
+  <img src="docs/images/theme-swatches.svg" alt="ColaMD themes" width="92%">
+</p>
+
 ## Custom Themes
 
 ColaMD supports custom CSS themes. Download themes from the [`themes/`](themes/) folder, or create your own and import via **Theme > Import Theme**.

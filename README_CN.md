@@ -69,6 +69,14 @@ ColaMD 有意保持简单：
 
 一件事，做到极致。
 
+## 主题
+
+12 个内置主题——6 浅 6 深，灵感来自 Bear、Notion、iA Writer、Kindle、Solarized、Nord、Gruvbox 和 Dracula。
+
+<p align="center">
+  <img src="docs/images/theme-swatches.svg" alt="ColaMD 主题" width="92%">
+</p>
+
 ## 自定义主题
 
 ColaMD 支持自定义 CSS 主题。从 [`themes/`](themes/) 文件夹下载主题，或自己创建后通过 **Theme > Import Theme** 导入。
