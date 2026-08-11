@@ -30,9 +30,8 @@ If ColaMD is useful to you, please give the project a ⭐ Star.
 - **Live Agent Sync** — Changes made by Claude Code, Cursor, Copilot, or other AI agents appear in the editor in real time.
 - **Agent Activity Indicator** — A subtle titlebar dot shows when an agent is writing and when it has finished.
 - **True WYSIWYG Editing** — Type Markdown and see rich text directly. No split-pane preview.
-- **File List Panel** — Browse Markdown files in the current folder and its subdirectories. When no file is open, it defaults to your Documents folder; files created or removed by your agent appear automatically.
+- **File List Panel** — Browse Markdown files in the current folder and its subdirectories. A fresh launch starts with bundled examples, so it never asks for Documents-folder permission before you open your own file; files created or removed by your agent appear automatically.
 - **Source Mode** — Switch to the raw Markdown source whenever you need to inspect or edit it directly.
-- **Mermaid Diagrams** — Render flowcharts, sequence diagrams, and more directly from Mermaid code blocks.
 - **Task Lists** — Click checkboxes to complete tasks, or use the keyboard shortcut.
 - **Highlights & LaTeX** — Write `==highlighted text==` and render mathematical formulas with KaTeX.
 - **Search** — Find anything in the current document with ⌘/Ctrl+F.
@@ -123,8 +122,9 @@ ColaMD will evolve alongside the agent ecosystem:
 - v1.7.1 — Task checkbox click fix, centered SVG checkmark, titlebar file-panel toggle button
 - v1.7.2 — Playable demo page: Help → 新功能演示 (⌘⇧D), a real directory showcasing each release's features
 - v1.7.3 — Demo page becomes a cumulative changelog: resources/demo/changelog.md records every release, opening straight into it (current)
-- v1.7.4 — Community-feedback release: file panel improvements, source mode, Mermaid diagrams, HTML export, Windows image paths, and a VS Code integration MVP
+- v1.7.4 — Community-feedback release: file panel improvements, source mode, HTML export, Windows image paths, and a VS Code integration MVP
 - v1.8.0 — Preserve portable local image paths when saving, and close out the remaining community Issues
+- v1.8.1 — Refresh the macOS icon, improve startup speed, and add Chinese / English Markdown references
 - Future — More themes, editor integrations, and smoother Markdown workflows
 
 ## License

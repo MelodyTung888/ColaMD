@@ -19,7 +19,9 @@ let dirty = false
 // so a programmatic load would spuriously mark the doc dirty unless we keep a
 // suppression window long enough to cover that debounce.
 let applyingUntil = 0
-let manualHidden = localStorage.getItem('file-panel-hidden') === '1'
+// Fresh installs start focused on the document. Once changed, the user's
+// explicit panel preference is preserved.
+let manualHidden = localStorage.getItem('file-panel-hidden') !== '0'
 
 function markApplying(): void {
   applyingUntil = Date.now() + 350
@@ -225,7 +227,7 @@ async function init(): Promise<void> {
     const btn = (e.target as HTMLElement).closest('button[data-path]') as HTMLButtonElement | null
     if (!btn || !btn.dataset.path) return
     if (btn.dataset.path === currentFilePath) return
-    if (dirty && !window.confirm('当前文件有未保存的修改，切换文件会丢失这些修改。是否继续？')) return
+    if (btn.dataset.kind === 'file' && dirty && !window.confirm('当前文件有未保存的修改，切换文件会丢失这些修改。是否继续？')) return
     await api.openSibling(btn.dataset.path)
   })
 

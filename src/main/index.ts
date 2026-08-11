@@ -9,21 +9,27 @@ const themesDir = join(app.getPath('home'), '.colamd', 'themes')
 
 const MARKDOWN_EXTENSIONS = ['.md', '.markdown', '.mdown', '.mkd']
 
+// Bundled examples are opened on demand from Help. Browsing the user's
+// Documents folder on macOS can trigger a privacy prompt before they have even
+// opened a file.
+const demoDir = app.isPackaged
+  ? join(process.resourcesPath, 'demo')
+  : join(__dirname, '../../resources/demo')
+const cheatsheetDir = app.isPackaged
+  ? join(process.resourcesPath, 'templates')
+  : join(__dirname, '../../resources/templates')
+
 interface SiblingFile {
   name: string
   path: string
   kind: 'file' | 'directory' | 'parent'
 }
 
-function getDefaultBrowsePath(): string {
-  const documentsPath = app.getPath('documents')
-  return existsSync(documentsPath) ? documentsPath : app.getPath('desktop')
-}
-
 // Browse Markdown files in the current directory. Directories are kept as
 // navigable entries rather than flattening the whole tree into one list.
 async function listSiblingFiles(filePath: string | null, browseDir?: string): Promise<SiblingFile[]> {
-  const dir = browseDir ?? (filePath ? dirname(filePath) : getDefaultBrowsePath())
+  const dir = browseDir ?? (filePath ? dirname(filePath) : null)
+  if (!dir) return []
   try {
     const entries = await readdir(dir, { withFileTypes: true })
     const result: SiblingFile[] = []
@@ -82,7 +88,7 @@ let pendingFilePaths: string[] = []
 function getState(win: BrowserWindow): WindowState {
   let state = windowStates.get(win.id)
   if (!state) {
-    state = { filePath: null, browsePath: getDefaultBrowsePath(), watcher: null, isInternalSave: false, debounceTimer: null, siblingsTimer: null, agentState: 'idle', lastExternalChange: 0, agentCooldownTimer: null }
+    state = { filePath: null, browsePath: null, watcher: null, isInternalSave: false, debounceTimer: null, siblingsTimer: null, agentState: 'idle', lastExternalChange: 0, agentCooldownTimer: null }
     windowStates.set(win.id, state)
   }
   return state
@@ -92,7 +98,7 @@ function getWinFromEvent(event: Electron.IpcMainInvokeEvent): BrowserWindow | nu
   return BrowserWindow.fromWebContents(event.sender)
 }
 
-function createWindow(filePath?: string, initialContent?: string): BrowserWindow {
+function createWindow(filePath?: string, initialContent?: string, initialBrowsePath?: string): BrowserWindow {
   const win = new BrowserWindow({
     width: 960,
     height: 720,
@@ -111,6 +117,7 @@ function createWindow(filePath?: string, initialContent?: string): BrowserWindow
   })
 
   const state = getState(win)
+  if (initialBrowsePath) state.browsePath = initialBrowsePath
 
   if (process.env.ELECTRON_RENDERER_URL) {
     win.loadURL(process.env.ELECTRON_RENDERER_URL)
@@ -633,22 +640,24 @@ ipcMain.handle('export-html', async (event, snapshot: {
   }
 })
 
-// What's-new demo page: a playable changelog directory (changelog.md + demo files)
-const demoDir = app.isPackaged
-  ? join(process.resourcesPath, 'demo')
-  : join(__dirname, '../../resources/demo')
-
-// Markdown cheatsheet shown via Help > Markdown 语法速查
-const cheatsheetPath = app.isPackaged
-  ? join(process.resourcesPath, 'templates', 'cheatsheet.md')
-  : join(__dirname, '../../resources/templates/cheatsheet.md')
-
-async function openCheatsheet(): Promise<void> {
+// Bundled Markdown documents open in an in-memory window. This keeps Help
+// useful even in a signed/read-only app bundle and avoids starting a watcher.
+async function openBundledDocument(fileName: string): Promise<void> {
   try {
-    const content = await readFile(cheatsheetPath, 'utf-8')
-    createWindow(undefined, content)
+    const content = await readFile(join(demoDir, fileName), 'utf-8')
+    createWindow(undefined, content, demoDir)
   } catch {
-    createWindow()
+    createWindow(undefined, undefined, demoDir)
+  }
+}
+
+async function openCheatsheet(language: 'zh' | 'en' = 'zh'): Promise<void> {
+  try {
+    const fileName = language === 'en' ? 'cheatsheet-en.md' : 'cheatsheet.md'
+    const content = await readFile(join(cheatsheetDir, fileName), 'utf-8')
+    createWindow(undefined, content, demoDir)
+  } catch {
+    createWindow(undefined, undefined, demoDir)
   }
 }
 
@@ -688,6 +697,10 @@ function getFocusedWindow(): BrowserWindow | null {
   return BrowserWindow.getFocusedWindow()
 }
 
+function getPreferredCheatsheetLanguage(): 'zh' | 'en' {
+  return app.getLocale().toLowerCase().startsWith('zh') ? 'zh' : 'en'
+}
+
 function sendToFocused(channel: string, ...args: unknown[]): void {
   const win = getFocusedWindow()
   if (win) win.webContents.send(channel, ...args)
@@ -714,17 +727,44 @@ function buildMenu(): void {
     }
   } catch { /* themes dir may not exist yet */ }
 
+  const preferredCheatsheetLanguage = getPreferredCheatsheetLanguage()
+  const labels = preferredCheatsheetLanguage === 'zh'
+    ? {
+        file: '文件', edit: '编辑', view: '视图', theme: '主题', help: '帮助',
+        newFile: '新建', open: '打开...', save: '保存', saveAs: '另存为...',
+        exportPDF: '导出 PDF...', exportHTML: '导出 HTML...', find: '查找',
+        insertFormula: '插入公式', filePanel: '显示 / 隐藏文件列表',
+        light: '浅色', dark: '深色', elegant: '雅致', newsprint: '报刊',
+        importTheme: '导入主题...', whatsNew: '新功能演示',
+        cheatsheet: 'Markdown 语法', about: '关于 ColaMD', close: '关闭窗口',
+        undo: '撤销', redo: '重做', cut: '剪切', copy: '复制', paste: '粘贴', selectAll: '全选',
+        actualSize: '实际大小', zoomIn: '放大', zoomOut: '缩小', fullscreen: '切换全屏',
+        hide: '隐藏 ColaMD', hideOthers: '隐藏其他应用', showAll: '显示全部', quit: '退出 ColaMD',
+      }
+    : {
+        file: 'File', edit: 'Edit', view: 'View', theme: 'Theme', help: 'Help',
+        newFile: 'New', open: 'Open...', save: 'Save', saveAs: 'Save As...',
+        exportPDF: 'Export PDF...', exportHTML: 'Export HTML...', find: 'Find',
+        insertFormula: 'Insert Formula', filePanel: 'Show / Hide File List',
+        light: 'Light', dark: 'Dark', elegant: 'Elegant', newsprint: 'Newsprint',
+        importTheme: 'Import Theme...', whatsNew: "What's New",
+        cheatsheet: 'Markdown Syntax', about: 'About ColaMD', close: 'Close Window',
+        undo: 'Undo', redo: 'Redo', cut: 'Cut', copy: 'Copy', paste: 'Paste', selectAll: 'Select All',
+        actualSize: 'Actual Size', zoomIn: 'Zoom In', zoomOut: 'Zoom Out', fullscreen: 'Toggle Full Screen',
+        hide: 'Hide ColaMD', hideOthers: 'Hide Others', showAll: 'Show All', quit: 'Quit ColaMD',
+      }
+
   const themeSubmenu: Electron.MenuItemConstructorOptions[] = [
-    { label: 'Light', click: () => sendToFocused('set-theme', 'light') },
-    { label: 'Dark', click: () => sendToFocused('set-theme', 'dark') },
-    { label: 'Elegant', click: () => sendToFocused('set-theme', 'elegant') },
-    { label: 'Newsprint', click: () => sendToFocused('set-theme', 'newsprint') },
+    { label: labels.light, click: () => sendToFocused('set-theme', 'light') },
+    { label: labels.dark, click: () => sendToFocused('set-theme', 'dark') },
+    { label: labels.elegant, click: () => sendToFocused('set-theme', 'elegant') },
+    { label: labels.newsprint, click: () => sendToFocused('set-theme', 'newsprint') },
   ]
   if (customThemeItems.length > 0) {
     themeSubmenu.push({ type: 'separator' }, ...customThemeItems)
   }
   themeSubmenu.push({ type: 'separator' }, {
-    label: 'Import Theme...',
+    label: labels.importTheme,
     click: () => sendToFocused('menu-import-theme')
   })
 
@@ -732,110 +772,110 @@ function buildMenu(): void {
     ...(isMac ? [{
       label: 'ColaMD',
       submenu: [
-        { role: 'about' as const },
+        { label: labels.about, role: 'about' as const },
         { type: 'separator' as const },
-        { role: 'hide' as const },
-        { role: 'hideOthers' as const },
-        { role: 'unhide' as const },
+        { label: labels.hide, role: 'hide' as const },
+        { label: labels.hideOthers, role: 'hideOthers' as const },
+        { label: labels.showAll, role: 'unhide' as const },
         { type: 'separator' as const },
-        { role: 'quit' as const }
+        { label: labels.quit, role: 'quit' as const }
       ]
     }] : []),
     {
-      label: 'File',
+      label: labels.file,
       submenu: [
         {
-          label: 'New',
+          label: labels.newFile,
           accelerator: 'CmdOrCtrl+N',
           click: () => createWindow()
         },
         {
-          label: 'Open...',
+          label: labels.open,
           accelerator: 'CmdOrCtrl+O',
           click: () => sendToFocused('menu-open')
         },
         { type: 'separator' },
         {
-          label: 'Save',
+          label: labels.save,
           accelerator: 'CmdOrCtrl+S',
           click: () => sendToFocused('menu-save')
         },
         {
-          label: 'Save As...',
+          label: labels.saveAs,
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => sendToFocused('menu-save-as')
         },
         { type: 'separator' },
         {
-          label: 'Export PDF...',
+          label: labels.exportPDF,
           click: () => sendToFocused('menu-export-pdf')
         },
         {
-          label: 'Export HTML...',
+          label: labels.exportHTML,
           click: () => sendToFocused('menu-export-html')
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit' }
+        isMac ? { label: labels.close, role: 'close' } : { label: labels.quit, role: 'quit' }
       ]
     },
     {
-      label: 'Edit',
+      label: labels.edit,
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { label: labels.undo, role: 'undo' },
+        { label: labels.redo, role: 'redo' },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
+        { label: labels.cut, role: 'cut' },
+        { label: labels.copy, role: 'copy' },
+        { label: labels.paste, role: 'paste' },
+        { label: labels.selectAll, role: 'selectAll' },
         { type: 'separator' },
         {
-          label: 'Find',
+          label: labels.find,
           accelerator: 'CmdOrCtrl+F',
           click: () => sendToFocused('editor:search')
         },
         {
-          label: 'Insert Formula',
+          label: labels.insertFormula,
           accelerator: 'CmdOrCtrl+Shift+E',
           click: () => sendToFocused('editor:math')
         }
       ]
     },
     {
-      label: 'View',
+      label: labels.view,
       submenu: [
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { label: labels.actualSize, role: 'resetZoom' },
+        { label: labels.zoomIn, role: 'zoomIn' },
+        { label: labels.zoomOut, role: 'zoomOut' },
         { type: 'separator' },
         {
-          label: '显示 / 隐藏文件列表',
+          label: labels.filePanel,
           accelerator: 'CmdOrCtrl+Shift+B',
           click: () => sendToFocused('toggle-file-panel')
         },
         { type: 'separator' },
-        { role: 'togglefullscreen' }
+        { label: labels.fullscreen, role: 'togglefullscreen' }
       ]
     },
     {
-      label: 'Theme',
+      label: labels.theme,
       submenu: themeSubmenu
     },
     {
-      label: 'Help',
+      label: labels.help,
       submenu: [
         {
-          label: '新功能演示',
+          label: labels.whatsNew,
           accelerator: 'CmdOrCtrl+Shift+D',
-          click: () => openFile(join(demoDir, 'changelog.md'))
+          click: () => { void openBundledDocument('changelog.md') }
         },
         {
-          label: 'Markdown 语法速查',
+          label: labels.cheatsheet,
           accelerator: 'CmdOrCtrl+Shift+/',
-          click: () => openCheatsheet()
+          click: () => { void openCheatsheet(preferredCheatsheetLanguage) }
         },
         {
-          label: 'About ColaMD',
+          label: labels.about,
           click: () => shell.openExternal('https://github.com/marswaveai/colamd')
         }
       ]
@@ -864,6 +904,8 @@ app.whenReady().then(() => {
     }
     pendingFilePaths = []
   } else {
+    // Start with an empty editor and no directory scan. Bundled examples stay
+    // available from Help and are loaded only when explicitly requested.
     createWindow()
   }
 

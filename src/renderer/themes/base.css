@@ -400,10 +400,11 @@ body.show-file-panel #source-editor {
   line-height: 1.6;
 }
 
-#editor .ProseMirror .code-copy-btn {
+/* Copy buttons live OUTSIDE the ProseMirror DOM (overlay widgets in the
+   editor root), so they are styled from the root, never inside .ProseMirror. */
+#editor > .code-copy-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  z-index: 10;
   padding: 3px 7px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -414,17 +415,18 @@ body.show-file-panel #source-editor {
   line-height: 1.4;
   cursor: pointer;
   opacity: 0;
+  transform: translate(-100%, 0);
   transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
-#editor .ProseMirror pre:hover .code-copy-btn,
-#editor .ProseMirror .code-copy-btn:focus-visible,
-#editor .ProseMirror .code-copy-btn.copied {
+#editor > .code-copy-btn.hovering,
+#editor > .code-copy-btn:focus-visible,
+#editor > .code-copy-btn.copied {
   opacity: 1;
 }
 
-#editor .ProseMirror .code-copy-btn:hover,
-#editor .ProseMirror .code-copy-btn.copied {
+#editor > .code-copy-btn:hover,
+#editor > .code-copy-btn.copied {
   background: rgba(127, 127, 127, 0.14);
   color: var(--text-color);
 }
@@ -433,33 +435,6 @@ body.show-file-panel #source-editor {
   max-width: 100%;
   height: auto;
   vertical-align: middle;
-}
-
-/* Mermaid diagrams */
-#editor .ProseMirror .colamd-code-block {
-  margin: 1em 0;
-}
-
-#editor .ProseMirror .mermaid-diagram {
-  overflow-x: auto;
-  padding: 12px 8px;
-  text-align: center;
-  background: var(--code-block-bg);
-  border-radius: 6px;
-}
-
-#editor .ProseMirror .mermaid-diagram svg {
-  max-width: 100%;
-  height: auto;
-}
-
-#editor .ProseMirror .mermaid-error {
-  padding: 8px 12px;
-  border: 1px solid var(--blockquote-border);
-  border-radius: 4px;
-  color: var(--text-muted);
-  font-size: 0.8em;
-  background: var(--blockquote-bg);
 }
 
 /* Blockquote */

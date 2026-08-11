@@ -10,7 +10,6 @@ import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { replaceAll, $prose } from '@milkdown/kit/utils'
 import { remarkMathPlugin, katexOptionsCtx, mathInlineSchema, mathBlockSchema } from '@milkdown/plugin-math'
 import { htmlView } from './html-view'
-import { mermaidView } from './mermaid-view'
 import { mathModal } from './math-modal'
 import { highlight, remarkHighlight, highlightStringifyHandler } from './highlight'
 
@@ -63,12 +62,12 @@ export function showMathModal(): void {
 let editorInstance: Editor | null = null
 
 const inlineStyles: Record<string, string> = {
-  'h1': 'font-size:1.8em;font-weight:700;margin:1em 0 .5em;padding-bottom:.3em;border-bottom:1px solid #eee;',
-  'h2': 'font-size:1.4em;font-weight:600;margin:1em 0 .5em;padding-bottom:.25em;border-bottom:1px solid #eee;',
-  'h3': 'font-size:1.2em;font-weight:600;margin:.8em 0 .4em;',
-  'h4': 'font-weight:600;margin:.8em 0 .4em;',
-  'h5': 'font-weight:600;margin:.8em 0 .4em;',
-  'h6': 'font-weight:600;margin:.8em 0 .4em;',
+  'h1': 'font-size:1.8em;margin:1em 0 .5em;padding-bottom:.3em;border-bottom:1px solid #eee;',
+  'h2': 'font-size:1.4em;margin:1em 0 .5em;padding-bottom:.25em;border-bottom:1px solid #eee;',
+  'h3': 'font-size:1.2em;margin:.8em 0 .4em;',
+  'h4': 'margin:.8em 0 .4em;',
+  'h5': 'margin:.8em 0 .4em;',
+  'h6': 'margin:.8em 0 .4em;',
   'p': 'margin:.5em 0;line-height:1.75;',
   'strong': 'font-weight:600;',
   'a': 'color:#0969da;text-decoration:none;',
@@ -79,7 +78,7 @@ const inlineStyles: Record<string, string> = {
   'ol': 'padding-left:24px;margin:.5em 0;',
   'li': 'margin:.25em 0;',
   'table': 'border-collapse:collapse;width:100%;margin:1em 0;',
-  'th': 'border:1px solid #ddd;padding:8px 12px;text-align:left;font-weight:600;background:#f6f8fa;',
+  'th': 'border:1px solid #ddd;padding:8px 12px;text-align:left;background:#f6f8fa;',
   'td': 'border:1px solid #ddd;padding:8px 12px;text-align:left;',
   'hr': 'border:none;border-top:2px solid #ddd;margin:2em 0;',
   'img': 'max-width:100%;',
@@ -122,43 +121,85 @@ async function copyText(text: string): Promise<void> {
   }
 }
 
-function decorateCodeBlocks(root: HTMLElement): void {
-  root.querySelectorAll('pre').forEach((pre) => {
-    if (pre.querySelector('.code-copy-btn') || !pre.querySelector('code')) return
+// Code-block copy button: ONE overlay button rendered OUTSIDE the
+// ProseMirror-managed DOM. ProseMirror re-syncs the DOM it owns from its
+// document state, so inserting UI nodes inside <pre> gets wiped (or previously
+// triggered an infinite rebuild loop — observed as 100% CPU with any fenced
+// code block). No MutationObserver is used to avoid self-triggering loops;
+// instead the button follows the hovered block and repositions on scroll.
+let copyButton: HTMLButtonElement | null = null
+let copyButtonPre: HTMLPreElement | null = null
+let copyButtonResetTimer: ReturnType<typeof setTimeout> | null = null
 
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.className = 'code-copy-btn'
-    button.textContent = '复制'
-    button.title = '复制代码'
-    button.setAttribute('aria-label', '复制代码')
-    button.contentEditable = 'false'
-    button.addEventListener('mousedown', (event) => event.preventDefault())
-    button.addEventListener('click', async (event) => {
-      event.preventDefault()
-      event.stopPropagation()
-      const code = pre.querySelector('code')?.textContent ?? ''
-      try {
-        await copyText(code)
-        button.textContent = '已复制 ✓'
-        button.classList.add('copied')
-        window.setTimeout(() => {
-          button.textContent = '复制'
-          button.classList.remove('copied')
-        }, 1500)
-      } catch {
-        button.textContent = '复制失败'
-        window.setTimeout(() => { button.textContent = '复制' }, 1500)
-      }
-    })
-    pre.appendChild(button)
+function editorRect(): DOMRect {
+  return (document.getElementById('editor') as HTMLElement).getBoundingClientRect()
+}
+
+function positionCopyButton(pre: HTMLPreElement): void {
+  if (!copyButton) return
+  const rect = pre.getBoundingClientRect()
+  const base = editorRect()
+  copyButton.style.left = `${rect.left - base.left + rect.width - 8}px`
+  copyButton.style.top = `${rect.top - base.top + 8}px`
+}
+
+function createCopyButton(): HTMLButtonElement {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = 'code-copy-btn'
+  button.textContent = '复制'
+  button.title = '复制代码'
+  button.setAttribute('aria-label', '复制代码')
+  button.style.position = 'absolute'
+  button.addEventListener('mousedown', (event) => event.preventDefault())
+  button.addEventListener('click', async (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (!copyButtonPre) return
+    const code = copyButtonPre.querySelector('code')?.textContent ?? ''
+    try {
+      await copyText(code)
+      button.textContent = '已复制 ✓'
+      button.classList.add('copied')
+      if (copyButtonResetTimer) clearTimeout(copyButtonResetTimer)
+      copyButtonResetTimer = setTimeout(() => {
+        button.textContent = '复制'
+        button.classList.remove('copied')
+      }, 1500)
+    } catch {
+      button.textContent = '复制失败'
+      if (copyButtonResetTimer) clearTimeout(copyButtonResetTimer)
+      copyButtonResetTimer = setTimeout(() => { button.textContent = '复制' }, 1500)
+    }
   })
+  document.getElementById('editor')?.appendChild(button)
+  return button
 }
 
 function setupCodeBlockCopy(root: HTMLElement): void {
-  decorateCodeBlocks(root)
-  const observer = new MutationObserver(() => decorateCodeBlocks(root))
-  observer.observe(root, { childList: true, subtree: true })
+  copyButton = createCopyButton()
+
+  const sync = (): void => {
+    if (!copyButton) return
+    const pre = root.querySelector('pre:hover') as HTMLPreElement | null
+    if (pre && pre.querySelector('code')) {
+      copyButtonPre = pre
+      copyButton.classList.add('hovering')
+      positionCopyButton(pre)
+    } else {
+      copyButtonPre = null
+      copyButton.classList.remove('hovering')
+    }
+  }
+
+  // ProseMirror fires DOM mutations on every doc change, so re-sync on its
+  // transaction loop instead of a MutationObserver (avoids self-trigger loops).
+  root.addEventListener('mouseover', sync)
+  root.addEventListener('mouseout', sync)
+  window.addEventListener('scroll', sync, { passive: true })
+  const resizeObserver = new ResizeObserver(sync)
+  resizeObserver.observe(root)
+  sync()
 }
 
 function toggleStrongMark(): void {
@@ -176,7 +217,9 @@ function toggleStrongMark(): void {
   })
 }
 
-const defaultContent = `# Welcome to ColaMD\n\nStart typing here...\n`
+const defaultContent = navigator.language.toLowerCase().startsWith('zh')
+  ? '# **欢迎使用 ColaMD**\n\n开始写作...\n'
+  : '# **Welcome to ColaMD**\n\nStart typing here...\n'
 
 export async function createEditor(
   rootId: string,
@@ -216,7 +259,6 @@ export async function createEditor(
     .use(listener)
     .use(clipboard)
     .use(htmlView)
-    .use(mermaidView)
     .use([remarkMathPlugin, katexOptionsCtx, mathInlineSchema, mathBlockSchema].flat())
     .use(mathEditorPlugin)
     .use(searchHighlight)
