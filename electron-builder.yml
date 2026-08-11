@@ -29,6 +29,10 @@ fileAssociations:
     name: Markdown Document
     role: Editor
     mimeType: text/markdown
+  - ext: txt
+    name: Text Document
+    role: Editor
+    mimeType: text/plain
 
 mac:
   target:

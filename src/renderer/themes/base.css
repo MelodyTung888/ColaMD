@@ -621,24 +621,6 @@ body.theme-elegant #editor .ProseMirror table td {
   border-right: none;
 }
 
-body.theme-newsprint {
-  --bg-color: #f5f2eb;
-  --text-color: #1a1a1a;
-  --text-muted: #666;
-  --border-color: #d4d0c8;
-  --link-color: #2c5f8a;
-  --code-bg: rgba(0, 0, 0, 0.05);
-  --code-block-bg: #eae6de;
-  --blockquote-border: #999;
-  --table-header-bg: #eae6de;
-  --selection-bg: rgba(44, 95, 138, 0.15);
-  --highlight-bg: #f3e3a3;
-}
-
-body.theme-newsprint #editor .ProseMirror {
-  font-family: 'PT Serif', Georgia, serif;
-}
-
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

@@ -2,7 +2,15 @@ const themes: Record<string, string> = {
   light: 'theme-light',
   dark: 'theme-dark',
   elegant: 'theme-elegant',
-  newsprint: 'theme-newsprint'
+  sepia: 'theme-sepia',
+  notion: 'theme-notion',
+  bear: 'theme-bear',
+  writer: 'theme-writer',
+  'solarized-dark': 'theme-solarized-dark',
+  nord: 'theme-nord',
+  gruvbox: 'theme-gruvbox',
+  dracula: 'theme-dracula',
+  midnight: 'theme-midnight'
 }
 
 let customStyleEl: HTMLStyleElement | null = null
@@ -36,5 +44,6 @@ export function applyTheme(name: string, customCSS?: string): void {
 }
 
 export function loadSavedTheme(): string {
-  return localStorage.getItem('colamd-theme') || 'elegant'
+  const saved = localStorage.getItem('colamd-theme')
+  return saved && themes[saved] ? saved : 'elegant'
 }

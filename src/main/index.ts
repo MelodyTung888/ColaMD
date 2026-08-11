@@ -693,6 +693,65 @@ ipcMain.handle('load-theme-css', async (_event, fileName: string) => {
 
 // Menu — targets the focused window
 
+function setAsDefaultApp(): void {
+  if (process.platform !== 'darwin') {
+    dialog.showMessageBox({
+      type: 'info',
+      message: 'This feature is available on macOS only.'
+    })
+    return
+  }
+
+  const script = `
+    ObjC.import('CoreServices');
+    var bundleID = 'ai.marswave.colamd';
+    var exts = ['md', 'markdown', 'mdown', 'mkd', 'txt'];
+    var results = [];
+    for (var i = 0; i < exts.length; i++) {
+      var ext = exts[i];
+      try {
+        var uti = $.UTTypeCreatePreferredIdentifierForTag(
+          $.kUTTagClassFilenameExtension,
+          $(ext),
+          null
+        ).takeRetainedValue();
+        $.LSSetDefaultRoleHandlerForContentType(uti, $.kLSRolesAll, $(bundleID));
+        results.push(ext + ': OK');
+      } catch (e) {
+        results.push(ext + ': ' + e.message);
+      }
+    }
+    JSON.stringify(results);
+  `
+
+  execFile('osascript', ['-l', 'JavaScript', '-e', script], (error, stdout, stderr) => {
+    if (error) {
+      dialog.showMessageBox({
+        type: 'error',
+        message: 'Failed to set ColaMD as the default app.',
+        detail: stderr || error.message
+      })
+      return
+    }
+    try {
+      const results: string[] = JSON.parse(stdout.trim())
+      const allOk = results.every((r) => r.endsWith(': OK'))
+      dialog.showMessageBox({
+        type: 'info',
+        message: allOk
+          ? 'ColaMD is now the default app for Markdown and text files.'
+          : 'Some file types could not be associated. System Settings may need manual adjustment.',
+        detail: results.join('\n')
+      })
+    } catch {
+      dialog.showMessageBox({
+        type: 'info',
+        message: 'Default app request sent. You may need to confirm in the system dialog.'
+      })
+    }
+  })
+}
+
 function getFocusedWindow(): BrowserWindow | null {
   return BrowserWindow.getFocusedWindow()
 }
@@ -733,8 +792,11 @@ function buildMenu(): void {
         file: '文件', edit: '编辑', view: '视图', theme: '主题', help: '帮助',
         newFile: '新建', open: '打开...', save: '保存', saveAs: '另存为...',
         exportPDF: '导出 PDF...', exportHTML: '导出 HTML...', find: '查找',
+        setDefault: '设置为默认应用...',
         insertFormula: '插入公式', filePanel: '显示 / 隐藏文件列表',
-        light: '浅色', dark: '深色', elegant: '雅致', newsprint: '报刊',
+        light: '浅色', dark: '深色', elegant: '雅致',
+        sepia: '羊皮纸', notion: '简白', bear: '熊红', writer: '作家',
+        solarizedDark: '夜航', nord: '极地', gruvbox: '暖木', dracula: '德古拉', midnight: '午夜',
         importTheme: '导入主题...', whatsNew: '新功能演示',
         cheatsheet: 'Markdown 语法', about: '关于 ColaMD', close: '关闭窗口',
         undo: '撤销', redo: '重做', cut: '剪切', copy: '复制', paste: '粘贴', selectAll: '全选',
@@ -745,8 +807,11 @@ function buildMenu(): void {
         file: 'File', edit: 'Edit', view: 'View', theme: 'Theme', help: 'Help',
         newFile: 'New', open: 'Open...', save: 'Save', saveAs: 'Save As...',
         exportPDF: 'Export PDF...', exportHTML: 'Export HTML...', find: 'Find',
+        setDefault: 'Set as Default...',
         insertFormula: 'Insert Formula', filePanel: 'Show / Hide File List',
-        light: 'Light', dark: 'Dark', elegant: 'Elegant', newsprint: 'Newsprint',
+        light: 'Light', dark: 'Dark', elegant: 'Elegant',
+        sepia: 'Sepia', notion: 'Notion', bear: 'Bear', writer: 'Writer',
+        solarizedDark: 'Solarized Dark', nord: 'Nord', gruvbox: 'Gruvbox', dracula: 'Dracula', midnight: 'Midnight',
         importTheme: 'Import Theme...', whatsNew: "What's New",
         cheatsheet: 'Markdown Syntax', about: 'About ColaMD', close: 'Close Window',
         undo: 'Undo', redo: 'Redo', cut: 'Cut', copy: 'Copy', paste: 'Paste', selectAll: 'Select All',
@@ -756,9 +821,18 @@ function buildMenu(): void {
 
   const themeSubmenu: Electron.MenuItemConstructorOptions[] = [
     { label: labels.light, click: () => sendToFocused('set-theme', 'light') },
-    { label: labels.dark, click: () => sendToFocused('set-theme', 'dark') },
     { label: labels.elegant, click: () => sendToFocused('set-theme', 'elegant') },
-    { label: labels.newsprint, click: () => sendToFocused('set-theme', 'newsprint') },
+    { label: labels.notion, click: () => sendToFocused('set-theme', 'notion') },
+    { label: labels.writer, click: () => sendToFocused('set-theme', 'writer') },
+    { label: labels.bear, click: () => sendToFocused('set-theme', 'bear') },
+    { label: labels.sepia, click: () => sendToFocused('set-theme', 'sepia') },
+    { type: 'separator' },
+    { label: labels.dark, click: () => sendToFocused('set-theme', 'dark') },
+    { label: labels.gruvbox, click: () => sendToFocused('set-theme', 'gruvbox') },
+    { label: labels.midnight, click: () => sendToFocused('set-theme', 'midnight') },
+    { label: labels.solarizedDark, click: () => sendToFocused('set-theme', 'solarized-dark') },
+    { label: labels.nord, click: () => sendToFocused('set-theme', 'nord') },
+    { label: labels.dracula, click: () => sendToFocused('set-theme', 'dracula') },
   ]
   if (customThemeItems.length > 0) {
     themeSubmenu.push({ type: 'separator' }, ...customThemeItems)
@@ -813,6 +887,11 @@ function buildMenu(): void {
         {
           label: labels.exportHTML,
           click: () => sendToFocused('menu-export-html')
+        },
+        { type: 'separator' },
+        {
+          label: labels.setDefault,
+          click: () => setAsDefaultApp()
         },
         { type: 'separator' },
         isMac ? { label: labels.close, role: 'close' } : { label: labels.quit, role: 'quit' }

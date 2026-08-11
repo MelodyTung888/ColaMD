@@ -2,6 +2,7 @@ import { createEditor, getMarkdown, setMarkdown, showMathModal } from './editor/
 import { SearchPanel } from './editor/search-panel'
 import { applyTheme, loadSavedTheme } from './themes/theme-manager'
 import './themes/base.css'
+import './themes/premium.css'
 
 let sourceModeActive = false
 const editorEl = () => document.getElementById('editor') as HTMLElement
