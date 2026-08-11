@@ -17,6 +17,15 @@ When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/images/markdown-cheatsheet.png" alt="ColaMD Markdown cheatsheet and interactive task list" width="49%">
+  <img src="docs/images/markdown-rendering.png" alt="ColaMD Markdown rendering with code blocks, quotes, tables, and smart line breaks" width="49%">
+</p>
+
+<p align="center"><em>Built-in syntax reference, interactive task lists, code blocks, quotes, tables, and smart line breaks.</em></p>
+
 ## Features
 
 - **Live Agent Sync** — Changes made by Claude Code, Cursor, Copilot, or other AI agents appear in the editor in real time.
@@ -35,15 +44,6 @@ When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD
 - **VS Code Integration** — Open the current Markdown file in ColaMD directly from VS Code.
 - **Minimal by Design** — No toolbar, no permanent sidebar, no distractions.
 - **Cross-Platform** — Available for macOS, Windows, and Linux.
-
-## Screenshots
-
-<p align="center">
-  <img src="docs/images/markdown-cheatsheet.png" alt="ColaMD Markdown cheatsheet and interactive task list" width="49%">
-  <img src="docs/images/markdown-rendering.png" alt="ColaMD Markdown rendering with code blocks, quotes, tables, and smart line breaks" width="49%">
-</p>
-
-<p align="center"><em>Built-in syntax reference, interactive task lists, code blocks, quotes, tables, and smart line breaks.</em></p>
 
 ## Works with your Markdown workflow
 

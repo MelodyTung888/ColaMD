@@ -17,6 +17,15 @@ ColaMD 是一款开源、免费、轻量的 Markdown 编辑器，用于写作、
 
 ---
 
+## 截图
+
+<p align="center">
+  <img src="docs/images/markdown-cheatsheet.png" alt="ColaMD Markdown 语法速查与交互式待办列表" width="49%">
+  <img src="docs/images/markdown-rendering.png" alt="ColaMD Markdown 渲染、代码块、引用、表格与智能换行" width="49%">
+</p>
+
+<p align="center"><em>内置语法速查、交互式待办列表、代码块、引用、表格与智能换行。</em></p>
+
 ## 功能
 
 - **实时 Agent 同步** — Claude Code、Cursor、Copilot 或其他 AI Agent 修改文件后，内容实时出现在编辑器中。
@@ -35,15 +44,6 @@ ColaMD 是一款开源、免费、轻量的 Markdown 编辑器，用于写作、
 - **VS Code 集成** — 在 VS Code 中将当前 Markdown 文件直接打开到 ColaMD。
 - **极简设计** — 没有工具栏，没有永久侧边栏，专注于内容本身。
 - **跨平台** — 支持 macOS、Windows 和 Linux。
-
-## 截图
-
-<p align="center">
-  <img src="docs/images/markdown-cheatsheet.png" alt="ColaMD Markdown 语法速查与交互式待办列表" width="49%">
-  <img src="docs/images/markdown-rendering.png" alt="ColaMD Markdown 渲染、代码块、引用、表格与智能换行" width="49%">
-</p>
-
-<p align="center"><em>内置语法速查、交互式待办列表、代码块、引用、表格与智能换行。</em></p>
 
 ## 与现有 Markdown 工作流配合
 
