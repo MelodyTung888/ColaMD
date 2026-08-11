@@ -30,6 +30,8 @@ ColaMD 是一款开源、免费、轻量的 Markdown 编辑器，用于写作、
 
 12 个内置主题——6 浅 6 深，灵感来自 Bear、Notion、iA Writer、Kindle、Solarized、Nord、Gruvbox 和 Dracula。
 
+每个主题也提供独立 CSS 文件，存放在 [`themes/`](themes/) 文件夹——下载后通过 **Theme > Import Theme** 导入即可。
+
 <p align="center">
   <img src="docs/images/theme-swatches.svg" alt="ColaMD 主题" width="92%">
 </p>

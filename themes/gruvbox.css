@@ -1,0 +1,41 @@
+/* ===== ColaMD Theme: 暖木 Gruvbox =====
+   Warm walnut dark, cream text, orange ember accents.
+
+   Import: Theme > Import Theme, or place in ~/.colamd/themes/
+   Variables target :root; element rules target the ColaMD editor DOM. */
+
+:root {
+  --bg-color: #282828;
+  --text-color: #ebdbb2;
+  --text-muted: #928374;
+  --border-color: #3c3836;
+  --link-color: #83a598;
+  --code-bg: rgba(235, 219, 178, 0.1);
+  --code-block-bg: #1d2021;
+  --blockquote-border: #fe8019;
+  --table-header-bg: #3c3836;
+  --selection-bg: rgba(254, 128, 25, 0.2);
+  --highlight-bg: rgba(250, 189, 47, 0.22);
+}
+
+#editor .ProseMirror h1,
+#editor .ProseMirror h2,
+#editor .ProseMirror h3 {
+  color: #fbf1c7;
+}
+
+#editor .ProseMirror strong {
+  color: #fe8019;
+}
+
+#editor .ProseMirror code {
+  color: #b8bb26;
+}
+
+#editor .ProseMirror blockquote {
+  color: #bdae93;
+}
+
+#editor .ProseMirror hr {
+  border-top-color: #504945;
+}

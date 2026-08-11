@@ -1,0 +1,47 @@
+/* ===== ColaMD Theme: 简白 Notion =====
+   Clean minimal workspace, warm off-black text on white.
+
+   Import: Theme > Import Theme, or place in ~/.colamd/themes/
+   Variables target :root; element rules target the ColaMD editor DOM. */
+
+:root {
+  --bg-color: #ffffff;
+  --text-color: #37352f;
+  --text-muted: #9b9a97;
+  --border-color: #e9e9e7;
+  --link-color: #37352f;
+  --code-bg: #f7f6f3;
+  --code-block-bg: #f7f6f3;
+  --blockquote-border: #37352f;
+  --table-header-bg: #f7f6f3;
+  --selection-bg: rgba(35, 131, 226, 0.14);
+  --highlight-bg: #fdecc8;
+}
+
+#editor .ProseMirror a {
+  text-decoration: underline;
+  text-decoration-color: #9b9a97;
+  text-underline-offset: 2px;
+}
+
+#editor .ProseMirror a:hover {
+  text-decoration-color: #37352f;
+}
+
+#editor .ProseMirror h1,
+#editor .ProseMirror h2 {
+  border-bottom: none;
+  padding-bottom: 0;
+  font-weight: 700;
+}
+
+#editor .ProseMirror code {
+  color: #eb5757;
+  background: #f7f6f3;
+}
+
+#editor .ProseMirror table th,
+#editor .ProseMirror table td {
+  border-left: none;
+  border-right: none;
+}

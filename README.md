@@ -30,6 +30,8 @@ When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD
 
 Twelve built-in themes — six light, six dark — inspired by Bear, Notion, iA Writer, Kindle, Solarized, Nord, Gruvbox, and Dracula.
 
+Each theme is also available as a standalone CSS file in the [`themes/`](themes/) folder — download and import it via **Theme > Import Theme**.
+
 <p align="center">
   <img src="docs/images/theme-swatches.svg" alt="ColaMD themes" width="92%">
 </p>

@@ -1,0 +1,37 @@
+/* ===== ColaMD Theme: 德古拉 Dracula =====
+   Gothic neon: pink, purple, and cyan candlelight.
+
+   Import: Theme > Import Theme, or place in ~/.colamd/themes/
+   Variables target :root; element rules target the ColaMD editor DOM. */
+
+:root {
+  --bg-color: #282a36;
+  --text-color: #f8f8f2;
+  --text-muted: #7f86a8;
+  --border-color: #44475a;
+  --link-color: #bd93f9;
+  --code-bg: rgba(98, 114, 164, 0.2);
+  --code-block-bg: #21222c;
+  --blockquote-border: #ff79c6;
+  --table-header-bg: #343746;
+  --selection-bg: rgba(189, 147, 249, 0.25);
+  --highlight-bg: rgba(241, 250, 140, 0.22);
+}
+
+#editor .ProseMirror h1,
+#editor .ProseMirror h2,
+#editor .ProseMirror h3 {
+  color: #ffffff;
+}
+
+#editor .ProseMirror strong {
+  color: #ff79c6;
+}
+
+#editor .ProseMirror code {
+  color: #8be9fd;
+}
+
+#editor .ProseMirror blockquote {
+  color: #c3c8e0;
+}

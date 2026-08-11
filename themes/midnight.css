@@ -1,0 +1,33 @@
+/* ===== ColaMD Theme: 午夜 Midnight =====
+   Pure OLED black, Apple-style blue links, maximum contrast.
+
+   Import: Theme > Import Theme, or place in ~/.colamd/themes/
+   Variables target :root; element rules target the ColaMD editor DOM. */
+
+:root {
+  --bg-color: #000000;
+  --text-color: #d6d6d6;
+  --text-muted: #7a7a7a;
+  --border-color: #262626;
+  --link-color: #0a84ff;
+  --code-bg: rgba(255, 255, 255, 0.08);
+  --code-block-bg: #111111;
+  --blockquote-border: #3a3a3a;
+  --table-header-bg: #111111;
+  --selection-bg: rgba(10, 132, 255, 0.28);
+  --highlight-bg: rgba(255, 214, 10, 0.25);
+}
+
+#editor .ProseMirror h1,
+#editor .ProseMirror h2,
+#editor .ProseMirror h3 {
+  color: #f5f5f5;
+}
+
+#editor .ProseMirror blockquote {
+  color: #9a9a9a;
+}
+
+#editor .ProseMirror hr {
+  border-top-width: 1px;
+}

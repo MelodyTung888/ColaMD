@@ -1,0 +1,44 @@
+/* ===== ColaMD Theme: 羊皮纸 Sepia =====
+   Kindle / Apple Books warm paper, serif body for long-form reading.
+
+   Import: Theme > Import Theme, or place in ~/.colamd/themes/
+   Variables target :root; element rules target the ColaMD editor DOM. */
+
+:root {
+  --bg-color: #f6efe0;
+  --text-color: #4f4032;
+  --text-muted: #9a8a72;
+  --border-color: #e2d7bf;
+  --link-color: #a0622d;
+  --code-bg: rgba(122, 90, 51, 0.1);
+  --code-block-bg: #ece2cb;
+  --blockquote-border: #c9a86a;
+  --blockquote-bg: #efe6d0;
+  --table-header-bg: #ece2cb;
+  --selection-bg: rgba(160, 98, 45, 0.15);
+  --highlight-bg: #f2dfa8;
+}
+
+#editor .ProseMirror {
+  font-family: Georgia, 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', serif;
+  line-height: 1.85;
+}
+
+#editor .ProseMirror h1 {
+  text-align: center;
+  border-bottom: none;
+  letter-spacing: 0.02em;
+}
+
+#editor .ProseMirror h2 {
+  border-bottom-style: dashed;
+}
+
+#editor .ProseMirror blockquote {
+  background: var(--blockquote-bg);
+  padding: 14px 20px 14px 24px;
+}
+
+#editor .ProseMirror code {
+  color: #7a5a33;
+}

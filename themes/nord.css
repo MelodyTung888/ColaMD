@@ -1,0 +1,37 @@
+/* ===== ColaMD Theme: 极地 Nord =====
+   Arctic night: cool blue-grays, frost-cyan links.
+
+   Import: Theme > Import Theme, or place in ~/.colamd/themes/
+   Variables target :root; element rules target the ColaMD editor DOM. */
+
+:root {
+  --bg-color: #2e3440;
+  --text-color: #d8dee9;
+  --text-muted: #7d8ba1;
+  --border-color: #3b4252;
+  --link-color: #88c0d0;
+  --code-bg: rgba(136, 192, 208, 0.12);
+  --code-block-bg: #262c37;
+  --blockquote-border: #81a1c1;
+  --table-header-bg: #3b4252;
+  --selection-bg: rgba(136, 192, 208, 0.2);
+  --highlight-bg: rgba(235, 203, 139, 0.25);
+}
+
+#editor .ProseMirror h1,
+#editor .ProseMirror h2,
+#editor .ProseMirror h3 {
+  color: #eceff4;
+}
+
+#editor .ProseMirror strong {
+  color: #8fbcbb;
+}
+
+#editor .ProseMirror code {
+  color: #88c0d0;
+}
+
+#editor .ProseMirror blockquote {
+  color: #aeb9c9;
+}

@@ -1,0 +1,43 @@
+/* ===== ColaMD Theme: 作家 Writer =====
+   iA Writer homage: monospace body, zero decoration.
+
+   Import: Theme > Import Theme, or place in ~/.colamd/themes/
+   Variables target :root; element rules target the ColaMD editor DOM. */
+
+:root {
+  --bg-color: #fcfcfa;
+  --text-color: #1a1a1a;
+  --text-muted: #8e8e8a;
+  --border-color: #e3e3de;
+  --link-color: #3b6ec4;
+  --code-bg: rgba(0, 0, 0, 0.05);
+  --code-block-bg: #f2f2ee;
+  --blockquote-border: #1a1a1a;
+  --table-header-bg: #f2f2ee;
+  --selection-bg: rgba(59, 110, 196, 0.15);
+  --highlight-bg: #fff3a3;
+}
+
+#editor .ProseMirror {
+  font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, 'PingFang SC', 'Noto Sans SC', monospace;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+#editor .ProseMirror h1,
+#editor .ProseMirror h2,
+#editor .ProseMirror h3 {
+  font-weight: 700;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+#editor .ProseMirror blockquote {
+  border-left-width: 3px;
+  font-style: normal;
+}
+
+#editor .ProseMirror table th,
+#editor .ProseMirror table td {
+  font-size: 0.9em;
+}
