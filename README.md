@@ -4,19 +4,11 @@
 
 **Language / 语言: [English](README.md) · [中文](README_CN.md)** · [Website](https://colamd.com/)
 
-Markdown has become the de facto standard for writing, note-taking, documentation, and collaboration in the age of AI. Yet many computers still don't have a free, beautiful, capable Markdown reader/editor.
+ColaMD is an open-source, free, lightweight Markdown editor for writing, notes, and documentation.
 
-That's why I built ColaMD — an open-source, free, lightweight, and elegant Markdown editor.
+It offers true WYSIWYG editing, themes, rich-text copy, smart line breaks, PDF and HTML export, and support for macOS, Windows, and Linux.
 
-First and foremost, it is a simple, focused, capable Markdown editor: true WYSIWYG editing, themes, rich-text copy, smart line breaks, PDF and HTML export, and support for macOS, Windows, and Linux.
-
-At the same time, ColaMD is friendly to AI agents. When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD syncs the changes in real time. No closing the file, reopening it, or manual refresh.
-
-After yesterday's v1.7.3 release, we received feedback from the community. v1.7.4 turned that feedback into a smoother Markdown workflow, and v1.8.0 fixes the edge case where local image paths could be saved back as absolute `file://` URLs. Thank you to everyone who has submitted Issues and Pull Requests, tested ColaMD, shared feedback, or joined the discussions. ColaMD is still growing — download it, try it, and tell us what you want it to become.
-
-Our goal is clear: make ColaMD the best free Markdown editor, and make it a reliable foundation for Markdown workflows in the age of AI.
-
-If ColaMD is useful to you, please give the project a ⭐ Star.
+When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD syncs the changes in real time.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/marswaveai/colamd.svg)](https://github.com/marswaveai/colamd/releases)
@@ -30,7 +22,7 @@ If ColaMD is useful to you, please give the project a ⭐ Star.
 - **Live Agent Sync** — Changes made by Claude Code, Cursor, Copilot, or other AI agents appear in the editor in real time.
 - **Agent Activity Indicator** — A subtle titlebar dot shows when an agent is writing and when it has finished.
 - **True WYSIWYG Editing** — Type Markdown and see rich text directly. No split-pane preview.
-- **File List Panel** — Browse Markdown files in the current folder and its subdirectories. A fresh launch starts with bundled examples, so it never asks for Documents-folder permission before you open your own file; files created or removed by your agent appear automatically.
+- **File List Panel** — Browse Markdown files in the selected folder and its subdirectories. Files created or removed by an agent appear automatically.
 - **Source Mode** — Switch to the raw Markdown source whenever you need to inspect or edit it directly.
 - **Task Lists** — Click checkboxes to complete tasks, or use the keyboard shortcut.
 - **Highlights & LaTeX** — Write `==highlighted text==` and render mathematical formulas with KaTeX.
@@ -71,7 +63,6 @@ ColaMD does not ask you to change your habits. It works well alongside Obsidian,
 
 ColaMD is intentionally simple:
 
-- No full file tree or workspace (only a lightweight directory browser and Markdown file list)
 - No cloud sync or collaboration
 - No AI features built in — it's a **viewer/editor** for AI-generated content
 - No plugin system
@@ -121,10 +112,8 @@ ColaMD will evolve alongside the agent ecosystem:
 - v1.7 — Same-directory file list: switch files in place, live updates when agents create/remove files; search (⌘F) + LaTeX (⌘⇧E) from community PR #14
 - v1.7.1 — Task checkbox click fix, centered SVG checkmark, titlebar file-panel toggle button
 - v1.7.2 — Playable demo page: Help → 新功能演示 (⌘⇧D), a real directory showcasing each release's features
-- v1.7.3 — Demo page becomes a cumulative changelog: resources/demo/changelog.md records every release, opening straight into it (current)
+- v1.7.3 — Demo page becomes a cumulative changelog: resources/demo/changelog.md records every release and opens straight into it
 - v1.7.4 — Community-feedback release: file panel improvements, source mode, HTML export, Windows image paths, and a VS Code integration MVP
-- v1.8.0 — Preserve portable local image paths when saving, and close out the remaining community Issues
-- v1.8.1 — Refresh the macOS icon, improve startup speed, and add Chinese / English Markdown references
 - Future — More themes, editor integrations, and smoother Markdown workflows
 
 ## License
