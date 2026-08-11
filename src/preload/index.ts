@@ -6,6 +6,21 @@ export interface SiblingFile {
   kind: 'file' | 'directory' | 'parent'
 }
 
+type FileOpenedData = { path: string | null; content: string }
+
+const pendingFileOpened: FileOpenedData[] = []
+let fileOpenedHandler: ((data: FileOpenedData) => void) | null = null
+
+// Register this listener as soon as preload starts. The main process can send
+// the initial content before the renderer finishes registering its callbacks.
+ipcRenderer.on('file-opened', (_event, data: FileOpenedData) => {
+  if (fileOpenedHandler) {
+    fileOpenedHandler(data)
+  } else {
+    pendingFileOpened.push(data)
+  }
+})
+
 export interface ElectronAPI {
   openFile: () => Promise<{ path: string; content: string } | null>
   openFilePath: (path: string) => Promise<{ path: string; content: string } | null>
@@ -21,7 +36,7 @@ export interface ElectronAPI {
   openExternal: (url: string) => void
   onFileChanged: (callback: (content: string) => void) => void
   onNewFile: (callback: () => void) => void
-  onFileOpened: (callback: (data: { path: string; content: string }) => void) => void
+  onFileOpened: (callback: (data: FileOpenedData) => void) => void
   onMenuOpen: (callback: () => void) => void
   onMenuSave: (callback: () => void) => void
   onMenuSaveAs: (callback: () => void) => void
@@ -56,8 +71,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onNewFile: (callback: () => void) => {
     ipcRenderer.on('new-file', () => callback())
   },
-  onFileOpened: (callback: (data: { path: string; content: string }) => void) => {
-    ipcRenderer.on('file-opened', (_event, data) => callback(data))
+  onFileOpened: (callback: (data: FileOpenedData) => void) => {
+    fileOpenedHandler = callback
+    for (const data of pendingFileOpened.splice(0)) callback(data)
   },
   onMenuOpen: (callback: () => void) => {
     ipcRenderer.on('menu-open', () => callback())
