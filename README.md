@@ -26,6 +26,14 @@ When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD
 
 <p align="center"><em>Built-in syntax reference, interactive task lists, code blocks, quotes, tables, and smart line breaks.</em></p>
 
+## Themes
+
+Twelve built-in themes — six light, six dark — inspired by Bear, Notion, iA Writer, Kindle, Solarized, Nord, Gruvbox, and Dracula.
+
+<p align="center">
+  <img src="docs/images/theme-swatches.svg" alt="ColaMD themes" width="92%">
+</p>
+
 ## Features
 
 - **Live Agent Sync** — Changes made by Claude Code, Cursor, Copilot, or other AI agents appear in the editor in real time.
@@ -68,14 +76,6 @@ ColaMD is intentionally simple:
 - No plugin system
 
 One thing, done well.
-
-## Themes
-
-Twelve built-in themes — six light, six dark — inspired by Bear, Notion, iA Writer, Kindle, Solarized, Nord, Gruvbox, and Dracula.
-
-<p align="center">
-  <img src="docs/images/theme-swatches.svg" alt="ColaMD themes" width="92%">
-</p>
 
 ## Custom Themes
 

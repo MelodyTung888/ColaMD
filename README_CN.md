@@ -26,6 +26,14 @@ ColaMD 是一款开源、免费、轻量的 Markdown 编辑器，用于写作、
 
 <p align="center"><em>内置语法速查、交互式待办列表、代码块、引用、表格与智能换行。</em></p>
 
+## 主题
+
+12 个内置主题——6 浅 6 深，灵感来自 Bear、Notion、iA Writer、Kindle、Solarized、Nord、Gruvbox 和 Dracula。
+
+<p align="center">
+  <img src="docs/images/theme-swatches.svg" alt="ColaMD 主题" width="92%">
+</p>
+
 ## 功能
 
 - **实时 Agent 同步** — Claude Code、Cursor、Copilot 或其他 AI Agent 修改文件后，内容实时出现在编辑器中。
@@ -68,14 +76,6 @@ ColaMD 有意保持简单：
 - 没有插件系统
 
 一件事，做到极致。
-
-## 主题
-
-12 个内置主题——6 浅 6 深，灵感来自 Bear、Notion、iA Writer、Kindle、Solarized、Nord、Gruvbox 和 Dracula。
-
-<p align="center">
-  <img src="docs/images/theme-swatches.svg" alt="ColaMD 主题" width="92%">
-</p>
 
 ## 自定义主题
 
