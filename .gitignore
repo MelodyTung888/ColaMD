@@ -3,6 +3,6 @@ dist/
 release/
 *.log
 .DS_Store
-.claude/
 *.env
 log.md
+vscode-extension/*.vsix

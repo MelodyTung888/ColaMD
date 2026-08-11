@@ -5,17 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https: http: file:;">
   <title>ColaMD</title>
+  <!-- Keep the titlebar stable before the renderer CSS bundle loads. -->
+  <style>
+    #titlebar { height: 52px; position: relative; -webkit-app-region: drag; }
+    #titlebar > button, #agent-dot { position: absolute; -webkit-app-region: no-drag; }
+    #titlebar > button { border: 0; background: transparent; color: inherit; display: flex; align-items: center; justify-content: center; }
+    #word-count, #source-toggle-btn, #file-toggle-btn { top: 12px; width: 28px; height: 28px; }
+    #word-count { right: 32px; }
+    #source-toggle-btn { right: 68px; }
+    #file-toggle-btn { right: 104px; }
+    #agent-dot { top: 22px; right: 16px; width: 8px; height: 8px; border-radius: 50%; background: rgba(127, 127, 127, 0.3); }
+    .toolbar-tip { position: absolute; opacity: 0; pointer-events: none; }
+    #editor { height: calc(100vh - 52px); }
+    #source-editor { display: none; }
+  </style>
 </head>
 <body>
   <div id="titlebar">
-    <div id="agent-dot"></div>
-    <button id="file-toggle-btn" title="显示 / 隐藏文件列表 (⌘⇧B)">
+    <div id="agent-dot" aria-label="Agent 状态">
+      <span class="toolbar-tip">Agent 状态</span>
+    </div>
+    <button id="word-count" title="文档统计" aria-label="文档统计">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/>
+        <line x1="4.5" y1="6" x2="11.5" y2="6"/>
+        <line x1="4.5" y1="9" x2="9.5" y2="9"/>
+      </svg>
+      <span class="toolbar-tip word-count-tip">0 字 · 0 词 · 0 段</span>
+    </button>
+    <button id="source-toggle-btn" title="切换 Markdown 源码 / 所见即所得" aria-label="切换 Markdown 源码 / 所见即所得">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="5.5 4.5 2 8 5.5 11.5"/>
+        <polyline points="10.5 4.5 14 8 10.5 11.5"/>
+      </svg>
+      <span class="toolbar-tip">切换 Markdown 源码 / 所见即所得</span>
+    </button>
+    <button id="file-toggle-btn" title="显示 / 隐藏文件列表 (⌘⇧B)" aria-label="显示 / 隐藏文件列表">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
         <rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/>
         <line x1="5.3" y1="3" x2="5.3" y2="13"/>
       </svg>
+      <span class="toolbar-tip">显示 / 隐藏文件列表</span>
     </button>
-    <button id="slides-btn" title="Open as Slides">&#9654;</button>
   </div>
   <aside id="file-panel" hidden>
     <div class="file-panel-header">文件</div>

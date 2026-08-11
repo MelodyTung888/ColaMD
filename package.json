@@ -1,6 +1,6 @@
 {
   "name": "colamd",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "description": "The Agent Native Markdown Editor",
   "main": "dist/main/index.js",
   "author": {
@@ -26,6 +26,7 @@
     "@milkdown/kit": "^7.19.2",
     "@milkdown/plugin-math": "^7.5.9",
     "katex": "^0.16.47",
+    "mermaid": "^11.16.1",
     "remark-breaks": "^4.0.0"
   },
   "devDependencies": {

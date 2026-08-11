@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron'
 export interface SiblingFile {
   name: string
   path: string
+  kind: 'file' | 'directory' | 'parent'
 }
 
 export interface ElectronAPI {
@@ -13,8 +14,7 @@ export interface ElectronAPI {
   saveFile: (content: string) => Promise<boolean>
   saveFileAs: (content: string) => Promise<boolean>
   exportPDF: () => Promise<boolean>
-  newSlides: () => Promise<string | null>
-  openAsSlides: (content: string) => Promise<boolean>
+  exportHTML: (snapshot: { content: string; html: string; styles: string; bodyClass: string }) => Promise<boolean>
   loadCustomTheme: () => Promise<{ name: string; css: string } | null>
   loadThemeCSS: (fileName: string) => Promise<string | null>
   getPathForFile: (file: File) => string
@@ -26,14 +26,10 @@ export interface ElectronAPI {
   onMenuSave: (callback: () => void) => void
   onMenuSaveAs: (callback: () => void) => void
   onMenuExportPDF: (callback: () => void) => void
-  onMenuNewSlides: (callback: () => void) => void
-  onMenuOpenAsSlides: (callback: () => void) => void
-  onNewSlidesContent: (callback: (content: string) => void) => void
+  onMenuExportHTML: (callback: () => void) => void
   onSetTheme: (callback: (theme: string) => void) => void
   onSetCustomCSS: (callback: (css: string) => void) => void
   onMenuImportTheme: (callback: () => void) => void
-  exportSlides: (content: string) => Promise<boolean>
-  onMenuExportSlides: (callback: () => void) => void
   onAgentActivity: (callback: (state: string) => void) => void
   onSearch: (callback: () => void) => void
   onMathModal: (callback: () => void) => void
@@ -49,9 +45,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveFile: (content: string) => ipcRenderer.invoke('save-file', content),
   saveFileAs: (content: string) => ipcRenderer.invoke('save-file-as', content),
   exportPDF: () => ipcRenderer.invoke('export-pdf'),
-  exportSlides: (content: string) => ipcRenderer.invoke('export-slides', content),
-  newSlides: () => ipcRenderer.invoke('new-slides'),
-  openAsSlides: (content: string) => ipcRenderer.invoke('open-as-slides', content),
+  exportHTML: (snapshot: { content: string; html: string; styles: string; bodyClass: string }) => ipcRenderer.invoke('export-html', snapshot),
   loadCustomTheme: () => ipcRenderer.invoke('load-custom-theme'),
   loadThemeCSS: (fileName: string) => ipcRenderer.invoke('load-theme-css', fileName),
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
@@ -77,14 +71,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMenuExportPDF: (callback: () => void) => {
     ipcRenderer.on('menu-export-pdf', () => callback())
   },
-  onMenuNewSlides: (callback: () => void) => {
-    ipcRenderer.on('menu-new-slides', () => callback())
-  },
-  onMenuOpenAsSlides: (callback: () => void) => {
-    ipcRenderer.on('menu-open-as-slides', () => callback())
-  },
-  onNewSlidesContent: (callback: (content: string) => void) => {
-    ipcRenderer.on('new-slides-content', (_event, content) => callback(content))
+  onMenuExportHTML: (callback: () => void) => {
+    ipcRenderer.on('menu-export-html', () => callback())
   },
   onSetTheme: (callback: (theme: string) => void) => {
     ipcRenderer.on('set-theme', (_event, theme) => callback(theme))
@@ -94,9 +82,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   onMenuImportTheme: (callback: () => void) => {
     ipcRenderer.on('menu-import-theme', () => callback())
-  },
-  onMenuExportSlides: (callback: () => void) => {
-    ipcRenderer.on('menu-export-slides', () => callback())
   },
   onAgentActivity: (callback: (state: string) => void) => {
     ipcRenderer.on('agent-activity', (_event, state) => callback(state))

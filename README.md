@@ -8,11 +8,11 @@ Markdown has become the de facto standard for writing, note-taking, documentatio
 
 That's why I built ColaMD — an open-source, free, lightweight, and elegant Markdown editor.
 
-First and foremost, it is a simple, focused, capable Markdown editor: true WYSIWYG editing, themes, rich-text copy, smart line breaks, PDF export, and support for macOS, Windows, and Linux.
+First and foremost, it is a simple, focused, capable Markdown editor: true WYSIWYG editing, themes, rich-text copy, smart line breaks, PDF and HTML export, and support for macOS, Windows, and Linux.
 
 At the same time, ColaMD is friendly to AI agents. When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD syncs the changes in real time. No closing the file, reopening it, or manual refresh.
 
-Since launching a few months ago, we have received enthusiastic feedback from the community. Thank you to everyone who has submitted Issues and Pull Requests, tested ColaMD, shared feedback, or joined the discussions. ColaMD is still growing — download it, try it, and tell us what you want it to become.
+After yesterday's v1.7.3 release, we received feedback from the community. Today's v1.7.4 turns that feedback into a smoother Markdown workflow. Thank you to everyone who has submitted Issues and Pull Requests, tested ColaMD, shared feedback, or joined the discussions. ColaMD is still growing — download it, try it, and tell us what you want it to become.
 
 Our goal is clear: make ColaMD the best free Markdown editor, and make it a reliable foundation for Markdown workflows in the age of AI.
 
@@ -30,14 +30,17 @@ If ColaMD is useful to you, please give the project a ⭐ Star.
 - **Live Agent Sync** — Changes made by Claude Code, Cursor, Copilot, or other AI agents appear in the editor in real time.
 - **Agent Activity Indicator** — A subtle titlebar dot shows when an agent is writing and when it has finished.
 - **True WYSIWYG Editing** — Type Markdown and see rich text directly. No split-pane preview.
-- **Same-Directory File List** — Discover and switch between Markdown files in the current folder. Files created or removed by your agent appear automatically.
+- **File List Panel** — Browse Markdown files in the current folder and its subdirectories. When no file is open, it defaults to your Documents folder; files created or removed by your agent appear automatically.
+- **Source Mode** — Switch to the raw Markdown source whenever you need to inspect or edit it directly.
+- **Mermaid Diagrams** — Render flowcharts, sequence diagrams, and more directly from Mermaid code blocks.
 - **Task Lists** — Click checkboxes to complete tasks, or use the keyboard shortcut.
 - **Highlights & LaTeX** — Write `==highlighted text==` and render mathematical formulas with KaTeX.
 - **Search** — Find anything in the current document with ⌘/Ctrl+F.
 - **Smart Line Breaks** — Single newlines render as line breaks, matching how people and AI tools write Markdown.
 - **Rich Text Copy** — Copy content with formatting preserved into WeChat, email, and other rich-text editors.
 - **Themes** — Four built-in themes, downloadable themes, and custom CSS imports.
-- **PDF Export** — Turn your Markdown document into a PDF when you need a finished copy.
+- **PDF & HTML Export** — Turn your Markdown document into a PDF or a self-contained HTML file when you need a finished copy.
+- **VS Code Integration** — Open the current Markdown file in ColaMD directly from VS Code.
 - **Minimal by Design** — No toolbar, no permanent sidebar, no distractions.
 - **Cross-Platform** — Available for macOS, Windows, and Linux.
 
@@ -68,7 +71,7 @@ ColaMD does not ask you to change your habits. It works well alongside Obsidian,
 
 ColaMD is intentionally simple:
 
-- No cross-directory file tree or workspace (same-directory Markdown file list only)
+- No full file tree or workspace (only a lightweight directory browser and Markdown file list)
 - No cloud sync or collaboration
 - No AI features built in — it's a **viewer/editor** for AI-generated content
 - No plugin system
@@ -114,12 +117,13 @@ ColaMD will evolve alongside the agent ecosystem:
 - v1.3 — Agent activity indicator, Cmd+click links, rich text copy, smart line breaks, PDF export, theme persistence
 - v1.6 — Robust live sync: atomic-save (rename) detection, watcher self-recovery, spellcheck off
 - v1.6.1 — Editable task lists (click / ⌘+Enter), ==highlight== syntax, Markdown cheatsheet
-- v1.6.2 — Remove HTML export
+- v1.6.2 — Temporarily remove HTML export
 - v1.7 — Same-directory file list: switch files in place, live updates when agents create/remove files; search (⌘F) + LaTeX (⌘⇧E) from community PR #14
 - v1.7.1 — Task checkbox click fix, centered SVG checkmark, titlebar file-panel toggle button
 - v1.7.2 — Playable demo page: Help → 新功能演示 (⌘⇧D), a real directory showcasing each release's features
 - v1.7.3 — Demo page becomes a cumulative changelog: resources/demo/changelog.md records every release, opening straight into it (current)
-- Future — More templates, bidirectional sync, cross-directory file browsing
+- v1.7.4 — Community-feedback release: file panel improvements, source mode, Mermaid diagrams, HTML export, Windows image paths, and a VS Code integration MVP
+- Future — More themes, editor integrations, and smoother Markdown workflows
 
 ## License
 

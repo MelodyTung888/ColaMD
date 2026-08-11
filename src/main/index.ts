@@ -1,9 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
-import { join, basename, dirname, extname } from 'path'
-import { readFile, writeFile, readdir, copyFile, mkdir } from 'fs/promises'
-import { watch, FSWatcher, existsSync, readdirSync, readFileSync } from 'fs'
-import { IncomingMessage, ServerResponse } from 'http'
-import { createServer as createHttpServer } from 'http'
+import { join, basename, dirname, extname, isAbsolute, resolve } from 'path'
+import { pathToFileURL } from 'url'
+import { readFile, writeFile, readdir, copyFile, mkdir, stat } from 'fs/promises'
+import { watch, FSWatcher, existsSync, readdirSync } from 'fs'
 
 // Custom themes directory
 const themesDir = join(app.getPath('home'), '.colamd', 'themes')
@@ -13,17 +12,37 @@ const MARKDOWN_EXTENSIONS = ['.md', '.markdown', '.mdown', '.mkd']
 interface SiblingFile {
   name: string
   path: string
+  kind: 'file' | 'directory' | 'parent'
 }
 
-// List markdown files in the same directory as filePath, sorted by name
-async function listSiblingFiles(filePath: string): Promise<SiblingFile[]> {
-  const dir = dirname(filePath)
+function getDefaultBrowsePath(): string {
+  const documentsPath = app.getPath('documents')
+  return existsSync(documentsPath) ? documentsPath : app.getPath('desktop')
+}
+
+// Browse Markdown files in the current directory. Directories are kept as
+// navigable entries rather than flattening the whole tree into one list.
+async function listSiblingFiles(filePath: string | null, browseDir?: string): Promise<SiblingFile[]> {
+  const dir = browseDir ?? (filePath ? dirname(filePath) : getDefaultBrowsePath())
   try {
     const entries = await readdir(dir, { withFileTypes: true })
-    return entries
-      .filter((e) => e.isFile() && MARKDOWN_EXTENSIONS.includes(extname(e.name).toLowerCase()))
-      .map((e) => ({ name: e.name, path: join(dir, e.name) }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+    const result: SiblingFile[] = []
+    const parent = dirname(dir)
+    if (parent !== dir) result.push({ name: '..', path: parent, kind: 'parent' })
+
+    result.push(
+      ...entries
+        .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+        .map((e) => ({ name: e.name, path: join(dir, e.name), kind: 'directory' as const }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    )
+    result.push(
+      ...entries
+        .filter((e) => e.isFile() && MARKDOWN_EXTENSIONS.includes(extname(e.name).toLowerCase()))
+        .map((e) => ({ name: e.name, path: join(dir, e.name), kind: 'file' as const }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    )
+    return result
   } catch {
     return []
   }
@@ -47,6 +66,7 @@ async function scanCustomThemes(): Promise<string[]> {
 // Per-window state
 interface WindowState {
   filePath: string | null
+  browsePath: string | null
   watcher: FSWatcher | null
   isInternalSave: boolean
   debounceTimer: ReturnType<typeof setTimeout> | null
@@ -62,7 +82,7 @@ let pendingFilePaths: string[] = []
 function getState(win: BrowserWindow): WindowState {
   let state = windowStates.get(win.id)
   if (!state) {
-    state = { filePath: null, watcher: null, isInternalSave: false, debounceTimer: null, siblingsTimer: null, agentState: 'idle', lastExternalChange: 0, agentCooldownTimer: null }
+    state = { filePath: null, browsePath: getDefaultBrowsePath(), watcher: null, isInternalSave: false, debounceTimer: null, siblingsTimer: null, agentState: 'idle', lastExternalChange: 0, agentCooldownTimer: null }
     windowStates.set(win.id, state)
   }
   return state
@@ -220,7 +240,7 @@ function watchFile(win: BrowserWindow, state: WindowState): void {
     state.siblingsTimer = setTimeout(() => {
       state.siblingsTimer = null
       if (state.filePath !== filePath) return // file switched meanwhile; new watcher handles it
-      listSiblingFiles(filePath).then((files) => {
+      listSiblingFiles(filePath, state.browsePath ?? dirname(filePath)).then((files) => {
         if (!win.isDestroyed()) win.webContents.send('siblings-changed', files)
       })
     }, 300)
@@ -280,12 +300,23 @@ function watchFile(win: BrowserWindow, state: WindowState): void {
   establish()
 }
 
-// Rewrite relative image paths in markdown to absolute file:// URLs
+// Rewrite local image paths to encoded file:// URLs. This handles both
+// standard Markdown images and the raw <img src="..."> HTML that Milkdown
+// accepts, including Windows drive letters, backslashes, spaces and Unicode.
+function localImageUrl(src: string, dir: string): string {
+  const value = src.trim().replace(/^<|>$/g, '')
+  if (/^(?:https?:|file:|data:|blob:)/i.test(value)) return src
+  return pathToFileURL(isAbsolute(value) ? value : resolve(dir, value)).href
+}
+
 function resolveImagePaths(content: string, filePath: string): string {
   const dir = dirname(filePath)
-  return content.replace(/!\[([^\]]*)\]\((?!https?:\/\/|file:\/\/|data:)([^)]+)\)/g, (_match, alt, src) => {
-    const abs = join(dir, src)
-    return `![${alt}](file://${abs})`
+  const markdown = content.replace(/!\[([^\]]*)\]\((?!https?:\/\/|file:\/\/|data:|blob:)([^)]+)\)/g, (_match, alt, src) => {
+    return `![${alt}](${localImageUrl(src, dir)})`
+  })
+
+  return markdown.replace(/(<img\b[^>]*\bsrc\s*=\s*)(["'])([^"']+)\2/gi, (_match, prefix, quote, src) => {
+    return `${prefix}${quote}${localImageUrl(src, dir)}${quote}`
   })
 }
 
@@ -294,6 +325,7 @@ function loadFileInWindow(win: BrowserWindow, filePath: string): void {
     .then((data) => {
       const state = getState(win)
       state.filePath = filePath
+      state.browsePath = dirname(filePath)
       watchFile(win, state)
       updateTitle(win)
       win.webContents.send('file-opened', { path: filePath, content: resolveImagePaths(data, filePath) })
@@ -348,6 +380,7 @@ async function saveToPath(win: BrowserWindow, filePath: string, content: string)
     state.isInternalSave = true
     await writeFile(filePath, content, 'utf-8')
     state.filePath = filePath
+    state.browsePath = dirname(filePath)
     watchFile(win, state)
     updateTitle(win)
     return true
@@ -387,6 +420,7 @@ ipcMain.handle('open-file', async (event) => {
     try {
       const content = await readFile(filePath, 'utf-8')
       state.filePath = filePath
+      state.browsePath = dirname(filePath)
       watchFile(win, state)
       updateTitle(win)
       win.webContents.send('file-opened', { path: filePath, content: resolveImagePaths(content, filePath) })
@@ -410,6 +444,7 @@ ipcMain.handle('open-file-path', async (event, filePath: string) => {
     try {
       const content = await readFile(filePath, 'utf-8')
       state.filePath = filePath
+      state.browsePath = dirname(filePath)
       watchFile(win, state)
       updateTitle(win)
       win.webContents.send('file-opened', { path: filePath, content: resolveImagePaths(content, filePath) })
@@ -428,14 +463,25 @@ ipcMain.handle('list-siblings', async (event) => {
   const win = getWinFromEvent(event)
   if (!win) return null
   const state = getState(win)
-  if (!state.filePath) return null
-  return listSiblingFiles(state.filePath)
+  return listSiblingFiles(state.filePath, state.browsePath ?? undefined)
 })
 
-// Switch the current window to a sibling file (replaces content, re-watches)
+// Open a Markdown file or navigate into a directory from the file panel.
 ipcMain.handle('open-sibling', async (event, filePath: string) => {
   const win = getWinFromEvent(event)
   if (!win || typeof filePath !== 'string') return false
+  try {
+    const info = await stat(filePath)
+    const state = getState(win)
+    if (info.isDirectory()) {
+      state.browsePath = filePath
+      const files = await listSiblingFiles(state.filePath, filePath)
+      if (!win.isDestroyed()) win.webContents.send('siblings-changed', files)
+      return true
+    }
+  } catch {
+    return false
+  }
   loadFileInWindow(win, filePath)
   return true
 })
@@ -454,17 +500,6 @@ ipcMain.handle('save-file', async (event, content: string) => {
     })
     if (result.canceled || !result.filePath) return false
     state.filePath = result.filePath
-    // Copy slides assets alongside the file if this looks like a slides file
-    if (content.includes('kicker:') || content.includes('chip:')) {
-      const destDir = dirname(state.filePath)
-      try {
-        const files = await readdir(slidesTemplateDir)
-        await Promise.all(files.filter(f => f !== 'slides-template.md').map(async (f) => {
-          const dest = join(destDir, f)
-          if (!existsSync(dest)) await copyFile(join(slidesTemplateDir, f), dest)
-        }))
-      } catch { /* best effort */ }
-    }
   }
   return saveToPath(win, state.filePath, content)
 })
@@ -510,11 +545,62 @@ ipcMain.handle('export-pdf', async (event) => {
   }
 })
 
-// ─── Slides feature ──────────────────────────────────────────────────────────
+function escapeHTML(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char] ?? char)
+}
 
-const slidesTemplateDir = app.isPackaged
-  ? join(process.resourcesPath, 'templates', 'slides')
-  : join(__dirname, '../../resources/templates/slides')
+ipcMain.handle('export-html', async (event, snapshot: {
+  content: string
+  html: string
+  styles: string
+  bodyClass: string
+}) => {
+  const win = getWinFromEvent(event)
+  if (!win) return false
+  const baseName = suggestFileName(win, snapshot.content) ?? 'untitled'
+  const result = await dialog.showSaveDialog(win, {
+    defaultPath: `${baseName}.html`,
+    filters: [{ name: 'HTML', extensions: ['html'] }]
+  })
+  if (result.canceled || !result.filePath) return false
+
+  const title = escapeHTML(baseName)
+  const bodyClass = escapeHTML(snapshot.bodyClass)
+  const renderedContent = snapshot.html || `<pre>${escapeHTML(snapshot.content)}</pre>`
+  const exportStyles = snapshot.styles || ''
+  const documentHTML = `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title}</title>
+  <style>${exportStyles}
+    html, body { height: auto; overflow: visible; }
+    body { min-width: 320px; }
+    #titlebar, #file-panel, #source-editor { display: none !important; }
+    #editor { height: auto !important; min-height: 100vh; overflow: visible !important; padding: 40px !important; }
+  </style>
+</head>
+<body class="${bodyClass}">
+  <div id="editor"><div class="ProseMirror">${renderedContent}</div></div>
+</body>
+</html>
+`
+
+  try {
+    await writeFile(result.filePath, documentHTML, 'utf-8')
+    shell.showItemInFolder(result.filePath)
+    return true
+  } catch {
+    return false
+  }
+})
 
 // What's-new demo page: a playable changelog directory (changelog.md + demo files)
 const demoDir = app.isPackaged
@@ -534,215 +620,6 @@ async function openCheatsheet(): Promise<void> {
     createWindow()
   }
 }
-
-// Per-directory HTTP servers for slides preview: dir -> { server, port }
-const slidesServers = new Map<string, { port: number; server: ReturnType<typeof createHttpServer> }>()
-
-const MIME: Record<string, string> = {
-  '.html': 'text/html',
-  '.md': 'text/plain',
-  '.css': 'text/css',
-  '.js': 'application/javascript',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.mp4': 'video/mp4',
-  '.webm': 'video/webm',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-}
-
-function getOrCreateSlidesServer(dir: string): Promise<number> {
-  const existing = slidesServers.get(dir)
-  if (existing) return Promise.resolve(existing.port)
-
-  return new Promise((resolve, reject) => {
-    const server = createHttpServer((req: IncomingMessage, res: ServerResponse) => {
-      const url = req.url === '/' ? '/template.html' : (req.url || '/')
-      const filePath = join(dir, url.split('?')[0])
-      const ext = extname(filePath).toLowerCase()
-      const mime = MIME[ext] || 'application/octet-stream'
-      try {
-        const data = readFileSync(filePath)
-        res.writeHead(200, { 'Content-Type': mime })
-        res.end(data)
-      } catch {
-        res.writeHead(404)
-        res.end('Not found')
-      }
-    })
-    server.listen(0, '127.0.0.1', () => {
-      const addr = server.address()
-      if (!addr || typeof addr === 'string') { reject(new Error('no port')); return }
-      slidesServers.set(dir, { port: addr.port, server })
-      resolve(addr.port)
-    })
-    server.on('error', reject)
-  })
-}
-
-// New Slides: load template into editor without saving first (⌘S saves later)
-// Also copy assets (template.html, icon.png) to the save directory when user saves
-ipcMain.handle('new-slides', async (event) => {
-  const win = getWinFromEvent(event)
-  if (!win) return null
-  try {
-    const content = await readFile(join(slidesTemplateDir, 'slides-template.md'), 'utf-8')
-    win.webContents.send('new-slides-content', content)
-    return true
-  } catch {
-    return null
-  }
-})
-
-// Open as Slides: serve the directory containing the current .md file
-// If no file is open, first create a new slides file (same as New Slides)
-ipcMain.handle('open-as-slides', async (event, content?: string) => {
-  const win = getWinFromEvent(event)
-  if (!win) return false
-  const state = getState(win)
-
-  // No file open — create one first
-  if (!state.filePath) {
-    const result = await dialog.showSaveDialog(win, {
-      title: 'Create New Slides',
-      defaultPath: 'slides.md',
-      filters: [{ name: 'Markdown', extensions: ['md'] }]
-    })
-    if (result.canceled || !result.filePath) return false
-    try {
-      await copyFile(join(slidesTemplateDir, 'slides-template.md'), result.filePath)
-      loadFileInWindow(win, result.filePath)
-      state.filePath = result.filePath
-    } catch {
-      return false
-    }
-  }
-
-  // Auto-save current content to disk before opening browser
-  if (content !== undefined && state.filePath) {
-    try {
-      await writeFile(state.filePath, content, 'utf-8')
-    } catch { /* best effort */ }
-  }
-
-  const dir = dirname(state.filePath)
-  const mdName = basename(state.filePath)
-
-  // Always overwrite template.html so updates take effect
-  const templateDest = join(dir, 'template.html')
-  try {
-    await copyFile(join(slidesTemplateDir, 'template.html'), templateDest)
-  } catch {
-    return false
-  }
-
-  // Rename slides.md reference in template to match actual filename
-  // (template always fetches 'slides.md' — if file is named differently, patch it)
-  if (mdName !== 'slides.md') {
-    try {
-      let html = await readFile(templateDest, 'utf-8')
-      html = html.replace(/fetch\('slides\.md'\)/, `fetch('${mdName}')`)
-      await writeFile(templateDest, html, 'utf-8')
-    } catch { /* best effort */ }
-  }
-
-  try {
-    const port = await getOrCreateSlidesServer(dir)
-    shell.openExternal(`http://127.0.0.1:${port}/template.html`)
-    return true
-  } catch {
-    return false
-  }
-})
-
-// Export Slides: inline images as base64, copy videos alongside, produce shareable output
-ipcMain.handle('export-slides', async (event, content: string) => {
-  const win = getWinFromEvent(event)
-  if (!win) return false
-  const state = getState(win)
-  if (!state.filePath) return false
-
-  const srcDir = dirname(state.filePath)
-
-  // Detect if content references any video files
-  const videoRefs = [...content.matchAll(/<!--\s*type:\s*video[^>]*src:\s*([^\s,>]+)/g)]
-    .map(m => m[1].trim())
-    .filter(Boolean)
-  const hasVideo = videoRefs.length > 0
-
-  // Choose export destination
-  let destDir: string
-  let destHtml: string
-
-  if (hasVideo) {
-    const result = await dialog.showSaveDialog(win, {
-      title: 'Export Slides Folder',
-      defaultPath: join(srcDir, 'slides-export'),
-      buttonLabel: 'Export'
-    })
-    if (result.canceled || !result.filePath) return false
-    destDir = result.filePath
-    destHtml = join(destDir, 'index.html')
-    await mkdir(destDir, { recursive: true })
-  } else {
-    const result = await dialog.showSaveDialog(win, {
-      title: 'Export Slides',
-      defaultPath: join(srcDir, 'slides.html'),
-      filters: [{ name: 'HTML', extensions: ['html'] }]
-    })
-    if (result.canceled || !result.filePath) return false
-    destDir = dirname(result.filePath)
-    destHtml = result.filePath
-  }
-
-  // Read template and inline the markdown content
-  let html = await readFile(join(srcDir, 'template.html'), 'utf-8')
-
-  // Replace fetch('slides.md') with inline content
-  const escaped = content.replace(/`/g, '\\`').replace(/\$/g, '\\$')
-  html = html.replace(
-    /fetch\('[^']+'\)\s*\n?\s*\.then\(r => r\.text\(\)\)/,
-    `Promise.resolve(\`${escaped}\`)`
-  )
-
-  // Inline images as base64
-  const imgMatches = [...content.matchAll(/!\[[^\]]*\]\((?!https?:\/\/|data:)([^)]+)\)/g)]
-  const inlinedImages = new Map<string, string>()
-  for (const m of imgMatches) {
-    const imgPath = m[1].trim()
-    if (inlinedImages.has(imgPath)) continue
-    try {
-      const abs = join(srcDir, imgPath)
-      const buf = await readFile(abs)
-      const ext = extname(imgPath).slice(1).toLowerCase()
-      const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
-        : ext === 'png' ? 'image/png'
-        : ext === 'gif' ? 'image/gif'
-        : ext === 'webp' ? 'image/webp'
-        : ext === 'svg' ? 'image/svg+xml'
-        : 'image/png'
-      inlinedImages.set(imgPath, `data:${mime};base64,${buf.toString('base64')}`)
-    } catch { /* skip missing images */ }
-  }
-  for (const [src, dataUrl] of inlinedImages) {
-    html = html.replaceAll(`src="${src}"`, `src="${dataUrl}"`)
-    html = html.replaceAll(`src='${src}'`, `src='${dataUrl}'`)
-  }
-
-  // Copy video files alongside if needed
-  if (hasVideo) {
-    for (const videoSrc of videoRefs) {
-      try {
-        await copyFile(join(srcDir, videoSrc), join(destDir, videoSrc))
-      } catch { /* skip missing videos */ }
-    }
-  }
-
-  await writeFile(destHtml, html, 'utf-8')
-  shell.showItemInFolder(destHtml)
-  return true
-})
 
 ipcMain.handle('load-custom-theme', async (event) => {
   const win = getWinFromEvent(event)
@@ -842,11 +719,6 @@ function buildMenu(): void {
           click: () => createWindow()
         },
         {
-          label: 'New Slides...',
-          accelerator: 'CmdOrCtrl+Shift+N',
-          click: () => sendToFocused('menu-new-slides')
-        },
-        {
           label: 'Open...',
           accelerator: 'CmdOrCtrl+O',
           click: () => sendToFocused('menu-open')
@@ -868,13 +740,8 @@ function buildMenu(): void {
           click: () => sendToFocused('menu-export-pdf')
         },
         {
-          label: 'Export Slides...',
-          click: () => sendToFocused('menu-export-slides')
-        },
-        {
-          label: 'Open as Slides',
-          accelerator: 'CmdOrCtrl+Shift+P',
-          click: () => sendToFocused('menu-open-as-slides')
+          label: 'Export HTML...',
+          click: () => sendToFocused('menu-export-html')
         },
         { type: 'separator' },
         isMac ? { role: 'close' } : { role: 'quit' }

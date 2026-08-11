@@ -21,6 +21,16 @@ $$
 
 行内公式 $a^2 + b^2 = c^2$ 也可以。
 
+## Mermaid 图表（v1.7.4）
+
+在代码块首行写上 `mermaid`，ColaMD 会直接渲染图表：
+
+```mermaid
+flowchart LR
+  Agent[AI Agent] --> File[Markdown 文件]
+  File --> ColaMD[ColaMD 实时同步]
+```
+
 ## 搜索
 
 按 **⌘F** 搜索当前文档，匹配项会高亮。

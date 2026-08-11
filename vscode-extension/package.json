@@ -1,0 +1,71 @@
+{
+  "name": "colamd-open-in-colamd",
+  "displayName": "ColaMD: Open in ColaMD",
+  "description": "Open the current Markdown file in ColaMD. Unsaved changes are saved to disk first so ColaMD's file watcher can see them.",
+  "version": "0.1.0",
+  "publisher": "colamd",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marswaveai/ColaMD.git",
+    "directory": "vscode-extension"
+  },
+  "files": [
+    "extension.js",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "colamd",
+    "markdown",
+    "editor"
+  ],
+  "activationEvents": [
+    "onCommand:colamd.openCurrentMarkdown"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "colamd.openCurrentMarkdown",
+        "title": "ColaMD: Open Current Markdown in ColaMD"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "colamd.openCurrentMarkdown",
+          "when": "editorLangId == markdown"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "colamd.openCurrentMarkdown",
+          "when": "editorLangId == markdown",
+          "group": "navigation@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ColaMD",
+      "properties": {
+        "colamd.executablePath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional path or name of the ColaMD executable. When empty, the platform default is used: macOS `open -a ColaMD <file>`, Linux `colamd <file>`, Windows `ColaMD.exe <file>`. Set this to a full path when ColaMD is not on PATH, e.g. `C:\\Program Files\\ColaMD\\ColaMD.exe`."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "check": "node --check extension.js",
+    "package": "npx --yes @vscode/vsce package"
+  }
+}

@@ -72,7 +72,6 @@ function hello() {
 | 名称 | 说明 |
 | --- | --- |
 | ColaMD | Agent Native Markdown 编辑器 |
-| Slides | 用 Markdown 做幻灯片 |
 
 源码：用 `|` 分隔列，第二行写 `---` 作为表头分隔线。
 
