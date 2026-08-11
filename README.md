@@ -12,7 +12,7 @@ First and foremost, it is a simple, focused, capable Markdown editor: true WYSIW
 
 At the same time, ColaMD is friendly to AI agents. When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD syncs the changes in real time. No closing the file, reopening it, or manual refresh.
 
-After yesterday's v1.7.3 release, we received feedback from the community. Today's v1.7.4 turns that feedback into a smoother Markdown workflow. Thank you to everyone who has submitted Issues and Pull Requests, tested ColaMD, shared feedback, or joined the discussions. ColaMD is still growing — download it, try it, and tell us what you want it to become.
+After yesterday's v1.7.3 release, we received feedback from the community. v1.7.4 turned that feedback into a smoother Markdown workflow, and v1.8.0 fixes the edge case where local image paths could be saved back as absolute `file://` URLs. Thank you to everyone who has submitted Issues and Pull Requests, tested ColaMD, shared feedback, or joined the discussions. ColaMD is still growing — download it, try it, and tell us what you want it to become.
 
 Our goal is clear: make ColaMD the best free Markdown editor, and make it a reliable foundation for Markdown workflows in the age of AI.
 
@@ -40,6 +40,7 @@ If ColaMD is useful to you, please give the project a ⭐ Star.
 - **Rich Text Copy** — Copy content with formatting preserved into WeChat, email, and other rich-text editors.
 - **Themes** — Four built-in themes, downloadable themes, and custom CSS imports.
 - **PDF & HTML Export** — Turn your Markdown document into a PDF or a self-contained HTML file when you need a finished copy.
+- **Portable Image Paths** — Local images use safe `file://` URLs for display and return to relative paths when saved.
 - **VS Code Integration** — Open the current Markdown file in ColaMD directly from VS Code.
 - **Minimal by Design** — No toolbar, no permanent sidebar, no distractions.
 - **Cross-Platform** — Available for macOS, Windows, and Linux.
@@ -123,6 +124,7 @@ ColaMD will evolve alongside the agent ecosystem:
 - v1.7.2 — Playable demo page: Help → 新功能演示 (⌘⇧D), a real directory showcasing each release's features
 - v1.7.3 — Demo page becomes a cumulative changelog: resources/demo/changelog.md records every release, opening straight into it (current)
 - v1.7.4 — Community-feedback release: file panel improvements, source mode, Mermaid diagrams, HTML export, Windows image paths, and a VS Code integration MVP
+- v1.8.0 — Preserve portable local image paths when saving, and close out the remaining community Issues
 - Future — More themes, editor integrations, and smoother Markdown workflows
 
 ## License

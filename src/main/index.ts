@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
-import { join, basename, dirname, extname, isAbsolute, resolve } from 'path'
-import { pathToFileURL } from 'url'
+import { join, basename, dirname, extname, isAbsolute, resolve, relative } from 'path'
+import { fileURLToPath, pathToFileURL } from 'url'
 import { readFile, writeFile, readdir, copyFile, mkdir, stat } from 'fs/promises'
 import { watch, FSWatcher, existsSync, readdirSync } from 'fs'
 
@@ -320,6 +320,37 @@ function resolveImagePaths(content: string, filePath: string): string {
   })
 }
 
+// Keep the editor's display URLs out of the Markdown source. Image paths are
+// rewritten to file:// URLs for rendering, then converted back to paths that
+// are portable relative to the file being saved.
+function sourceImageUrl(src: string, dir: string): string {
+  const value = src.trim()
+  if (!/^file:/i.test(value)) return src
+
+  try {
+    const target = fileURLToPath(value)
+    const portable = relative(dir, target).replaceAll('\\', '/')
+    return portable || './'
+  } catch {
+    return src
+  }
+}
+
+function markdownImagePath(value: string): string {
+  return /[\s()]/.test(value) ? `<${value}>` : value
+}
+
+function restoreImagePaths(content: string, filePath: string): string {
+  const dir = dirname(filePath)
+  const markdown = content.replace(/!\[([^\]]*)\]\((file:[^)]+)\)/gi, (_match, alt, src) => {
+    return `![${alt}](${markdownImagePath(sourceImageUrl(src, dir))})`
+  })
+
+  return markdown.replace(/(<img\b[^>]*\bsrc\s*=\s*)(["'])(file:[^"']+)\2/gi, (_match, prefix, quote, src) => {
+    return `${prefix}${quote}${sourceImageUrl(src, dir)}${quote}`
+  })
+}
+
 function loadFileInWindow(win: BrowserWindow, filePath: string): void {
   readFile(filePath, 'utf-8')
     .then((data) => {
@@ -378,7 +409,7 @@ async function saveToPath(win: BrowserWindow, filePath: string, content: string)
   const state = getState(win)
   try {
     state.isInternalSave = true
-    await writeFile(filePath, content, 'utf-8')
+    await writeFile(filePath, restoreImagePaths(content, filePath), 'utf-8')
     state.filePath = filePath
     state.browsePath = dirname(filePath)
     watchFile(win, state)
