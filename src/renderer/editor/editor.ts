@@ -105,6 +105,77 @@ function enhanceClipboard(e: ClipboardEvent): void {
   e.clipboardData?.setData('text/html', doc.body.innerHTML)
 }
 
+async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return
+  } catch {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    textarea.remove()
+  }
+}
+
+function decorateCodeBlocks(root: HTMLElement): void {
+  root.querySelectorAll('pre').forEach((pre) => {
+    if (pre.querySelector('.code-copy-btn') || !pre.querySelector('code')) return
+
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'code-copy-btn'
+    button.textContent = '复制'
+    button.title = '复制代码'
+    button.setAttribute('aria-label', '复制代码')
+    button.contentEditable = 'false'
+    button.addEventListener('mousedown', (event) => event.preventDefault())
+    button.addEventListener('click', async (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      const code = pre.querySelector('code')?.textContent ?? ''
+      try {
+        await copyText(code)
+        button.textContent = '已复制 ✓'
+        button.classList.add('copied')
+        window.setTimeout(() => {
+          button.textContent = '复制'
+          button.classList.remove('copied')
+        }, 1500)
+      } catch {
+        button.textContent = '复制失败'
+        window.setTimeout(() => { button.textContent = '复制' }, 1500)
+      }
+    })
+    pre.appendChild(button)
+  })
+}
+
+function setupCodeBlockCopy(root: HTMLElement): void {
+  decorateCodeBlocks(root)
+  const observer = new MutationObserver(() => decorateCodeBlocks(root))
+  observer.observe(root, { childList: true, subtree: true })
+}
+
+function toggleStrongMark(): void {
+  if (!editorInstance) return
+  editorInstance.action((ctx) => {
+    const view = ctx.get(editorViewCtx)
+    const { from, to, empty } = view.state.selection
+    if (empty) return
+    const strong = view.state.schema.marks.strong
+    if (!strong) return
+    const transaction = view.state.doc.rangeHasMark(from, to, strong)
+      ? view.state.tr.removeMark(from, to, strong)
+      : view.state.tr.addMark(from, to, strong.create())
+    view.dispatch(transaction)
+  })
+}
+
 const defaultContent = `# Welcome to ColaMD\n\nStart typing here...\n`
 
 export async function createEditor(
@@ -113,6 +184,8 @@ export async function createEditor(
 ): Promise<Editor> {
   const root = document.getElementById(rootId)
   if (!root) throw new Error(`Element #${rootId} not found`)
+
+  setupCodeBlockCopy(root)
 
   editorInstance = await Editor.make()
     .config((ctx) => {
@@ -152,6 +225,14 @@ export async function createEditor(
   // Enhance clipboard with inline styles for rich text paste (e.g. WeChat)
   root.addEventListener('copy', enhanceClipboard)
   root.addEventListener('cut', enhanceClipboard)
+
+  // Cmd/Ctrl+B toggles the strong mark for an existing selection. This keeps
+  // basic formatting editable without adding a permanent toolbar.
+  root.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || !(e.metaKey || e.ctrlKey) || e.altKey || e.key.toLowerCase() !== 'b') return
+    e.preventDefault()
+    toggleStrongMark()
+  })
 
   // Cmd+click (Mac) / Ctrl+click (Win/Linux) to open links in browser
   root.addEventListener('click', (e) => {
