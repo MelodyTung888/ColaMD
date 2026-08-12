@@ -271,6 +271,18 @@ html, body {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#file-list button:hover .file-entry-name.scrolling {
+  text-overflow: clip;
+  animation: file-entry-scroll var(--file-entry-scroll-duration) ease-in-out 500ms infinite alternate;
+}
+
+@keyframes file-entry-scroll {
+  to {
+    transform: translateX(calc(-1 * var(--file-entry-scroll)));
+  }
 }
 
 #file-list button:hover {

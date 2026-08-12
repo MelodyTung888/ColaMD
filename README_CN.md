@@ -13,7 +13,7 @@ ColaMD 是一款开源、免费、轻量的 Markdown 编辑器，用于写作、
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/marswaveai/colamd.svg)](https://github.com/marswaveai/colamd/releases)
 
-[下载](#下载) | [功能](#功能) | [开发](#开发)
+[下载](#下载) | [功能](#功能)
 
 ---
 
@@ -29,8 +29,6 @@ ColaMD 是一款开源、免费、轻量的 Markdown 编辑器，用于写作、
 ## 主题
 
 12 个内置主题——6 浅 6 深，灵感来自 Bear、Notion、iA Writer、Kindle、Solarized、Nord、Gruvbox 和 Dracula。
-
-每个主题也提供独立 CSS 文件，存放在 [`themes/`](themes/) 文件夹——下载后通过 **Theme > Import Theme** 导入即可。
 
 <p align="center">
   <img src="docs/images/theme-swatches.svg" alt="ColaMD 主题" width="92%">
@@ -48,7 +46,7 @@ ColaMD 是一款开源、免费、轻量的 Markdown 编辑器，用于写作、
 - **文档搜索** — 使用 ⌘/Ctrl+F 快速查找内容。
 - **智能换行** — 单个换行直接渲染为换行，符合人类和 AI 工具写 Markdown 的习惯。
 - **富文本复制** — 复制后粘贴到公众号、微信、邮件等富文本编辑器，格式完整保留。
-- **主题** — 4 个内置主题、可下载主题，以及自定义 CSS 导入。
+- **主题** — 12 个内置主题，在浅色和深色环境中专注写作。
 - **PDF 与 HTML 导出** — 在需要交付时，将 Markdown 文档导出为 PDF 或独立 HTML 文件。
 - **图片路径可移植保存** — 本地图片显示使用安全的 `file://` URL，保存时恢复为相对路径。
 - **VS Code 集成** — 在 VS Code 中将当前 Markdown 文件直接打开到 ColaMD。
@@ -69,46 +67,6 @@ ColaMD 不要求你改变现有习惯，也适合与 Obsidian、Typora、VS Code
 | Windows | `.exe` |
 | Linux | `.AppImage` / `.deb` |
 
-## ColaMD 不做的事
-
-ColaMD 有意保持简单：
-
-- 没有云同步或协作编辑
-- 没有内置 AI 功能 — 它是 AI 生成内容的**查看器/编辑器**
-- 没有插件系统
-
-一件事，做到极致。
-
-## 自定义主题
-
-ColaMD 支持自定义 CSS 主题。从 [`themes/`](themes/) 文件夹下载主题，或自己创建后通过 **Theme > Import Theme** 导入。
-
-导入的主题会保存到 `~/.colamd/themes/`，重启后仍然可用。
-
-## 开发
-
-```bash
-git clone https://github.com/marswaveai/colamd.git
-cd colamd
-npm install
-npm run dev
-```
-
-### 构建
-
-```bash
-npm run dist:mac
-npm run dist:win
-npm run dist:linux
-```
-
-### 技术栈
-
-- **Electron** — 跨平台桌面
-- **Milkdown** — 所见即所得 Markdown（基于 ProseMirror）
-- **TypeScript** — 严格模式
-- **electron-vite** — 快速构建
-
 ## 路线图
 
 ColaMD 将随 Agent 生态一起演进：
@@ -124,6 +82,9 @@ ColaMD 将随 Agent 生态一起演进：
 - v1.7.2 — 可玩演示页：Help → 新功能演示（⌘⇧D），用真实目录展示每个版本的新功能
 - v1.7.3 — 演示页升级为累积式 changelog：resources/demo/changelog.md 记录每个版本，打开即见
 - v1.7.4 — 根据社区反馈完善文件面板、源码模式、HTML 导出、Windows 图片路径，并提供 VS Code 集成 MVP
+- v1.8.0 — Markdown 与 HTML 本地图片均可移植保存，并完成社区反馈中的编辑修复
+- v1.8.1 — 优化首次启动体验和 macOS 图标；移除 Mermaid 渲染，代码块恢复为原生可编辑体验
+- v1.8.2 — 12 个内置主题，包含 6 个浅色与 6 个深色主题
 - 未来 — 更多主题、编辑器集成与 Markdown 工作流优化
 
 ## 开源协议

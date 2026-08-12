@@ -13,7 +13,7 @@ When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/marswaveai/colamd.svg)](https://github.com/marswaveai/colamd/releases)
 
-[Download](#download) | [Features](#features) | [Development](#development)
+[Download](#download) | [Features](#features)
 
 ---
 
@@ -29,8 +29,6 @@ When Claude Code, Codex, Cola, or another agent edits an open `.md` file, ColaMD
 ## Themes
 
 Twelve built-in themes — six light, six dark — inspired by Bear, Notion, iA Writer, Kindle, Solarized, Nord, Gruvbox, and Dracula.
-
-Each theme is also available as a standalone CSS file in the [`themes/`](themes/) folder — download and import it via **Theme > Import Theme**.
 
 <p align="center">
   <img src="docs/images/theme-swatches.svg" alt="ColaMD themes" width="92%">
@@ -48,7 +46,7 @@ Each theme is also available as a standalone CSS file in the [`themes/`](themes/
 - **Search** — Find anything in the current document with ⌘/Ctrl+F.
 - **Smart Line Breaks** — Single newlines render as line breaks, matching how people and AI tools write Markdown.
 - **Rich Text Copy** — Copy content with formatting preserved into WeChat, email, and other rich-text editors.
-- **Themes** — Four built-in themes, downloadable themes, and custom CSS imports.
+- **Themes** — Twelve built-in themes for focused writing in light or dark environments.
 - **PDF & HTML Export** — Turn your Markdown document into a PDF or a self-contained HTML file when you need a finished copy.
 - **Portable Image Paths** — Local images use safe `file://` URLs for display and return to relative paths when saved.
 - **VS Code Integration** — Open the current Markdown file in ColaMD directly from VS Code.
@@ -69,46 +67,6 @@ ColaMD does not ask you to change your habits. It works well alongside Obsidian,
 | Windows  | `.exe` |
 | Linux    | `.AppImage` / `.deb` |
 
-## What ColaMD Does NOT Do
-
-ColaMD is intentionally simple:
-
-- No cloud sync or collaboration
-- No AI features built in — it's a **viewer/editor** for AI-generated content
-- No plugin system
-
-One thing, done well.
-
-## Custom Themes
-
-ColaMD supports custom CSS themes. Download themes from the [`themes/`](themes/) folder, or create your own and import via **Theme > Import Theme**.
-
-Imported themes are saved to `~/.colamd/themes/` and persist across sessions.
-
-## Development
-
-```bash
-git clone https://github.com/marswaveai/colamd.git
-cd colamd
-npm install
-npm run dev
-```
-
-### Build
-
-```bash
-npm run dist:mac
-npm run dist:win
-npm run dist:linux
-```
-
-### Tech Stack
-
-- **Electron** — Cross-platform desktop
-- **Milkdown** — WYSIWYG Markdown (ProseMirror-based)
-- **TypeScript** — Strict mode
-- **electron-vite** — Fast builds
-
 ## Roadmap
 
 ColaMD will evolve alongside the agent ecosystem:
@@ -124,6 +82,9 @@ ColaMD will evolve alongside the agent ecosystem:
 - v1.7.2 — Playable demo page: Help → 新功能演示 (⌘⇧D), a real directory showcasing each release's features
 - v1.7.3 — Demo page becomes a cumulative changelog: resources/demo/changelog.md records every release and opens straight into it
 - v1.7.4 — Community-feedback release: file panel improvements, source mode, HTML export, Windows image paths, and a VS Code integration MVP
+- v1.8.0 — Portable image paths for Markdown and HTML images, plus editing fixes from community feedback
+- v1.8.1 — Refined first-launch experience and macOS icon; removed Mermaid rendering so code blocks remain native and editable
+- v1.8.2 — Twelve built-in themes, including six light and six dark themes
 - Future — More themes, editor integrations, and smoother Markdown workflows
 
 ## License

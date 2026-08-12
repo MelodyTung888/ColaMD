@@ -111,6 +111,18 @@ function renderFileList(files: import('../preload/index').SiblingFile[]): void {
     const label = document.createElement('span')
     label.className = 'file-entry-name'
     label.textContent = f.kind === 'parent' ? '..' : f.name
+    btn.addEventListener('mouseenter', () => {
+      const overflow = label.scrollWidth - label.clientWidth
+      if (overflow <= 0) return
+      label.style.setProperty('--file-entry-scroll', `${overflow}px`)
+      label.style.setProperty('--file-entry-scroll-duration', `${Math.min(6, Math.max(2.4, overflow / 20))}s`)
+      label.classList.add('scrolling')
+    })
+    btn.addEventListener('mouseleave', () => {
+      label.classList.remove('scrolling')
+      label.style.removeProperty('--file-entry-scroll')
+      label.style.removeProperty('--file-entry-scroll-duration')
+    })
     btn.title = f.kind === 'directory' ? `打开 ${f.name}` : f.kind === 'parent' ? '返回上级目录' : f.name
     btn.dataset.path = f.path
     btn.dataset.kind = f.kind
