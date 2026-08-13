@@ -12,9 +12,15 @@ This is the holding list for requests that have a clear user need but are not co
 
 **Constraints:** Use an existing menu command or keyboard shortcut. Do not add a persistent toolbar control. Define collision handling, image naming, clipboard behavior, and the destination folder before implementation.
 
-### Heading outline
+### Windows startup performance
 
-**Need:** Let people navigate long documents by headings.
+**Need:** Windows users report that ColaMD starts noticeably slower than Typora.
+
+**Plan:** Keep this as a performance optimization candidate for the weekly planning cycle. First measure cold and warm startup on comparable machines, then profile main-process startup, window creation, renderer loading, editor initialization, and time to first interaction.
+
+**Constraints:** Optimize measured bottlenecks without adding persistent services, workspace state, or extra UI. Preserve file hot-reload, editor availability, and cross-platform behavior.
+
+
 
 **Why it fits:** This is useful for long-form Markdown, but it must remain secondary to writing.
 
