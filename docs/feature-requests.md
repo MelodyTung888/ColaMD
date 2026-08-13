@@ -20,6 +20,22 @@ This is the holding list for requests that have a clear user need but are not co
 
 **Constraints:** Do not add a permanent outline panel. Explore an on-demand, lightweight interaction only after validating that heading navigation cannot be served by existing editor behavior.
 
+### Diagram rendering (Mermaid / mindmap)
+
+**Need:** Render Mermaid and mindmap diagrams inside Markdown documents, which are common in technical notes and planning.
+
+**Why it fits:** Diagram rendering is a frequent Markdown workflow. An earlier Mermaid integration caused high CPU usage and freezes, so it was removed in v1.8.1.
+
+**Constraints:** Large feature. Reintroduce only with a stable, isolated renderer that never blocks editing or slows first launch. Native code blocks must remain editable.
+
+### Footnote hover preview
+
+**Need:** Hover a footnote reference to preview its definition in place, instead of jumping to the document bottom.
+
+**Why it fits:** Standard GFM footnotes (`[^1]` / `[^1]:`) are already parsed. A hover preview improves navigation without adding new UI.
+
+**Constraints:** Build on the existing footnote rendering with a lightweight hover interaction. Do not add a permanent panel.
+
 ## Declined
 
 ### Built-in translation
