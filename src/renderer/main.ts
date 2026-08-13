@@ -12,6 +12,7 @@ const fileListEl = () => document.getElementById('file-list') as HTMLElement
 const fileToggleBtnEl = () => document.getElementById('file-toggle-btn') as HTMLButtonElement
 const sourceToggleBtnEl = () => document.getElementById('source-toggle-btn') as HTMLButtonElement
 const wordCountEl = () => document.getElementById('word-count') as HTMLElement
+const fileTitleEl = () => document.getElementById('file-title') as HTMLElement
 
 // --- Same-directory file panel ---
 let currentFilePath: string | null = null
@@ -62,7 +63,6 @@ function updateSourceToggle(): void {
   const label = sourceModeActive
     ? '切换回所见即所得'
     : '切换 Markdown 源码'
-  btn.title = label
   btn.setAttribute('aria-label', label)
   const tip = btn.querySelector('.toolbar-tip')
   if (tip) tip.textContent = label
@@ -92,6 +92,11 @@ function togglePanel(): void {
   manualHidden = !manualHidden
   localStorage.setItem('file-panel-hidden', manualHidden ? '1' : '0')
   updatePanelVisibility()
+}
+
+function updateFileTitle(): void {
+  const name = currentFilePath ? (currentFilePath.split(/[\\/]/).pop() || currentFilePath) : '未命名'
+  fileTitleEl().textContent = name
 }
 
 function renderFileList(files: import('../preload/index').SiblingFile[]): void {
@@ -264,12 +269,22 @@ async function init(): Promise<void> {
   })
 
   api.onMenuSave(async () => {
-    const ok = await api.saveFile(getContent())
-    if (ok) dirty = false
+    const path = await api.saveFile(getContent())
+    if (path) {
+      dirty = false
+      currentFilePath = path
+      updateFileTitle()
+      refreshSiblings()
+    }
   })
   api.onMenuSaveAs(async () => {
-    const ok = await api.saveFileAs(getContent())
-    if (ok) dirty = false
+    const path = await api.saveFileAs(getContent())
+    if (path) {
+      dirty = false
+      currentFilePath = path
+      updateFileTitle()
+      refreshSiblings()
+    }
   })
   api.onMenuExportPDF(() => api.exportPDF())
   api.onMenuExportHTML(() => { void exportCurrentHTML() })
@@ -280,6 +295,7 @@ async function init(): Promise<void> {
     dirty = false
     markApplying()
     setContent(data.content)
+    updateFileTitle()
     updatePanelVisibility()
     refreshSiblings()
   })
@@ -314,7 +330,6 @@ async function init(): Promise<void> {
       : state === 'cooldown'
         ? 'Agent 刚刚完成修改'
         : 'Agent 状态'
-    agentDot.title = label
     agentDot.setAttribute('aria-label', label)
     const tip = agentDot.querySelector('.toolbar-tip')
     if (tip) tip.textContent = label

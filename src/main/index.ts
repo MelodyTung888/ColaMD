@@ -105,7 +105,7 @@ function createWindow(filePath?: string, initialContent?: string, initialBrowseP
     minWidth: 600,
     minHeight: 400,
     titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 16 },
+    trafficLightPosition: { x: 16, y: 14 },
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -526,7 +526,7 @@ ipcMain.handle('open-sibling', async (event, filePath: string) => {
 
 ipcMain.handle('save-file', async (event, content: string) => {
   const win = getWinFromEvent(event)
-  if (!win) return false
+  if (!win) return null
   const state = getState(win)
   if (!state.filePath) {
     const result = await dialog.showSaveDialog(win, {
@@ -536,15 +536,16 @@ ipcMain.handle('save-file', async (event, content: string) => {
         { name: 'All Files', extensions: ['*'] }
       ]
     })
-    if (result.canceled || !result.filePath) return false
+    if (result.canceled || !result.filePath) return null
     state.filePath = result.filePath
   }
-  return saveToPath(win, state.filePath, content)
+  const ok = await saveToPath(win, state.filePath, content)
+  return ok ? state.filePath : null
 })
 
 ipcMain.handle('save-file-as', async (event, content: string) => {
   const win = getWinFromEvent(event)
-  if (!win) return false
+  if (!win) return null
   const result = await dialog.showSaveDialog(win, {
     defaultPath: suggestFileName(win, content),
     filters: [
@@ -552,8 +553,9 @@ ipcMain.handle('save-file-as', async (event, content: string) => {
       { name: 'All Files', extensions: ['*'] }
     ]
   })
-  if (result.canceled || !result.filePath) return false
-  return saveToPath(win, result.filePath, content)
+  if (result.canceled || !result.filePath) return null
+  const ok = await saveToPath(win, result.filePath, content)
+  return ok ? result.filePath : null
 })
 
 ipcMain.handle('export-pdf', async (event) => {

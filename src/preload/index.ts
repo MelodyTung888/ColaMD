@@ -26,8 +26,8 @@ export interface ElectronAPI {
   openFilePath: (path: string) => Promise<{ path: string; content: string } | null>
   listSiblings: () => Promise<SiblingFile[] | null>
   openSibling: (path: string) => Promise<boolean>
-  saveFile: (content: string) => Promise<boolean>
-  saveFileAs: (content: string) => Promise<boolean>
+  saveFile: (content: string) => Promise<string | null>
+  saveFileAs: (content: string) => Promise<string | null>
   exportPDF: () => Promise<boolean>
   exportHTML: (snapshot: { content: string; html: string; styles: string; bodyClass: string }) => Promise<boolean>
   loadCustomTheme: () => Promise<{ name: string; css: string } | null>
