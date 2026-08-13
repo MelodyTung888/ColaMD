@@ -13,6 +13,9 @@ const fileToggleBtnEl = () => document.getElementById('file-toggle-btn') as HTML
 const sourceToggleBtnEl = () => document.getElementById('source-toggle-btn') as HTMLButtonElement
 const wordCountEl = () => document.getElementById('word-count') as HTMLElement
 const fileTitleEl = () => document.getElementById('file-title') as HTMLElement
+const updateBannerEl = () => document.getElementById('update-banner') as HTMLElement
+const updateBannerTextEl = () => document.getElementById('update-banner-text') as HTMLElement
+const updateBannerActionEl = () => document.getElementById('update-banner-action') as HTMLButtonElement
 
 // --- Same-directory file panel ---
 let currentFilePath: string | null = null
@@ -319,6 +322,39 @@ async function init(): Promise<void> {
   api.onMenuImportTheme(async () => {
     const result = await api.loadCustomTheme()
     if (result) applyTheme(`custom:${result.name}`, result.css)
+  })
+
+  // --- Auto update banner (weak, non-blocking) ---
+  let updateDownloaded = false
+  function showUpdateBanner(version: string): void {
+    updateBannerTextEl().textContent = updateDownloaded
+      ? `新版本 v${version} 已就绪`
+      : `发现新版本 v${version}`
+    updateBannerActionEl().textContent = updateDownloaded ? '重启安装' : '更新'
+    updateBannerActionEl().disabled = false
+    updateBannerEl().hidden = false
+  }
+
+  api.onUpdateAvailable((version) => {
+    updateDownloaded = false
+    showUpdateBanner(version)
+  })
+  api.onUpdateDownloaded((version) => {
+    updateDownloaded = true
+    showUpdateBanner(version)
+  })
+
+  updateBannerActionEl().addEventListener('click', async () => {
+    if (updateDownloaded) {
+      await api.installUpdate()
+    } else {
+      updateBannerActionEl().textContent = '下载中…'
+      updateBannerActionEl().disabled = true
+      await api.downloadUpdate()
+    }
+  })
+  document.getElementById('update-banner-dismiss')!.addEventListener('click', () => {
+    updateBannerEl().hidden = true
   })
 
   const agentDot = document.getElementById('agent-dot')

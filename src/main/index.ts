@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { join, basename, dirname, extname, isAbsolute, resolve, relative } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import { readFile, writeFile, readdir, copyFile, mkdir, stat } from 'fs/promises'
@@ -762,6 +763,8 @@ function getPreferredCheatsheetLanguage(): 'zh' | 'en' {
   return app.getLocale().toLowerCase().startsWith('zh') ? 'zh' : 'en'
 }
 
+let latestVersion: string | null = null
+
 function sendToFocused(channel: string, ...args: unknown[]): void {
   const win = getFocusedWindow()
   if (win) win.webContents.send(channel, ...args)
@@ -800,7 +803,7 @@ function buildMenu(): void {
         sepia: '羊皮纸', notion: '简白', bear: '熊红', writer: '作家',
         solarizedDark: '夜航', nord: '极地', gruvbox: '暖木', dracula: '德古拉', midnight: '午夜',
         importTheme: '导入主题...', whatsNew: '新功能演示',
-        cheatsheet: 'Markdown 语法', about: '关于 ColaMD', close: '关闭窗口',
+        cheatsheet: 'Markdown 语法', about: '关于 ColaMD', updateAvailable: '发现新版本', close: '关闭窗口',
         undo: '撤销', redo: '重做', cut: '剪切', copy: '复制', paste: '粘贴', selectAll: '全选',
         actualSize: '实际大小', zoomIn: '放大', zoomOut: '缩小', fullscreen: '切换全屏',
         hide: '隐藏 ColaMD', hideOthers: '隐藏其他应用', showAll: '显示全部', quit: '退出 ColaMD',
@@ -815,7 +818,7 @@ function buildMenu(): void {
         sepia: 'Sepia', notion: 'Notion', bear: 'Bear', writer: 'Writer',
         solarizedDark: 'Solarized Dark', nord: 'Nord', gruvbox: 'Gruvbox', dracula: 'Dracula', midnight: 'Midnight',
         importTheme: 'Import Theme...', whatsNew: "What's New",
-        cheatsheet: 'Markdown Syntax', about: 'About ColaMD', close: 'Close Window',
+        cheatsheet: 'Markdown Syntax', about: 'About ColaMD', updateAvailable: 'Update Available', close: 'Close Window',
         undo: 'Undo', redo: 'Redo', cut: 'Cut', copy: 'Copy', paste: 'Paste', selectAll: 'Select All',
         actualSize: 'Actual Size', zoomIn: 'Zoom In', zoomOut: 'Zoom Out', fullscreen: 'Toggle Full Screen',
         hide: 'Hide ColaMD', hideOthers: 'Hide Others', showAll: 'Show All', quit: 'Quit ColaMD',
@@ -956,8 +959,8 @@ function buildMenu(): void {
           click: () => { void openCheatsheet(preferredCheatsheetLanguage) }
         },
         {
-          label: labels.about,
-          click: () => shell.openExternal('https://github.com/marswaveai/colamd')
+          label: latestVersion ? `${labels.updateAvailable} v${latestVersion}` : labels.about,
+          click: () => shell.openExternal(latestVersion ? 'https://colamd.com/' : 'https://github.com/marswaveai/colamd')
         }
       ]
     }
@@ -965,6 +968,41 @@ function buildMenu(): void {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
+
+// --- Auto update (weak, non-blocking) ---
+function setupAutoUpdater(): void {
+  if (!app.isPackaged) return
+
+  autoUpdater.autoDownload = false
+  autoUpdater.autoInstallOnAppQuit = true
+
+  const broadcast = (channel: string, version: string): void => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed()) win.webContents.send(channel, version)
+    }
+  }
+
+  autoUpdater.on('update-available', (info) => {
+    latestVersion = info.version
+    buildMenu()
+    broadcast('update-available', info.version)
+  })
+  autoUpdater.on('update-downloaded', (info) => broadcast('update-downloaded', info.version))
+  autoUpdater.on('error', (err) => console.error('autoUpdater:', err.message))
+
+  // Defer the first check so it never delays startup.
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch(() => {})
+  }, 8000)
+}
+
+ipcMain.handle('download-update', async () => {
+  await autoUpdater.downloadUpdate()
+})
+
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall(false, true)
+})
 
 // App lifecycle
 
@@ -989,6 +1027,8 @@ app.whenReady().then(() => {
     // available from Help and are loaded only when explicitly requested.
     createWindow()
   }
+
+  setupAutoUpdater()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

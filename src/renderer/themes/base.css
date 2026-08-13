@@ -849,3 +849,66 @@ body.theme-elegant #editor .ProseMirror table td {
 .math-modal-btn.save:hover {
   opacity: 0.9;
 }
+
+/* Update banner (weak, non-blocking) */
+#update-banner {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px 9px 14px;
+  border-radius: 8px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  color: var(--text-color);
+  font-size: 13px;
+  z-index: 100;
+}
+
+#update-banner[hidden] {
+  display: none;
+}
+
+#update-banner-text {
+  white-space: nowrap;
+}
+
+#update-banner-action {
+  border: none;
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--link-color);
+  color: #fff;
+}
+
+#update-banner-action:hover {
+  opacity: 0.9;
+}
+
+#update-banner-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#update-banner-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+#update-banner-dismiss:hover {
+  background: rgba(127, 127, 127, 0.14);
+  color: var(--text-color);
+}

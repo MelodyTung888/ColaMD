@@ -50,6 +50,10 @@ export interface ElectronAPI {
   onMathModal: (callback: () => void) => void
   onSiblingsChanged: (callback: (files: SiblingFile[]) => void) => void
   onToggleFilePanel: (callback: () => void) => void
+  onUpdateAvailable: (callback: (version: string) => void) => void
+  onUpdateDownloaded: (callback: (version: string) => void) => void
+  downloadUpdate: () => Promise<void>
+  installUpdate: () => Promise<void>
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -113,5 +117,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   onToggleFilePanel: (callback: () => void) => {
     ipcRenderer.on('toggle-file-panel', () => callback())
-  }
+  },
+  onUpdateAvailable: (callback: (version: string) => void) => {
+    ipcRenderer.on('update-available', (_event, version) => callback(version))
+  },
+  onUpdateDownloaded: (callback: (version: string) => void) => {
+    ipcRenderer.on('update-downloaded', (_event, version) => callback(version))
+  },
+  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update')
 } satisfies ElectronAPI)
