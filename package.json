@@ -1,26 +1,23 @@
 {
-  "name": "colamd",
-  "version": "1.8.2",
-  "description": "The Agent Native Markdown Editor",
+  "name": "colamd-melody",
+  "version": "1.9.0",
+  "description": "ColaMD Melody — a macOS Markdown editor for humans and AI agents",
   "main": "dist/main/index.js",
-  "author": {
-    "name": "marswave.ai",
-    "email": "hello@marswave.ai"
-  },
+  "author": "MelodyTung888 and ColaMD contributors",
   "license": "MIT",
-  "homepage": "https://github.com/marswaveai/colamd",
+  "homepage": "https://github.com/MelodyTung888/ColaMD#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marswaveai/colamd.git"
+    "url": "https://github.com/MelodyTung888/ColaMD.git"
   },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.main.json && tsc --noEmit -p tsconfig.preload.json && tsc --noEmit -p tsconfig.renderer.json",
+    "check": "npm run typecheck && npm run build",
     "preview": "electron-vite preview",
-    "dist": "electron-vite build && electron-builder",
-    "dist:mac": "electron-vite build && electron-builder --mac",
-    "dist:win": "electron-vite build && electron-builder --win",
-    "dist:linux": "electron-vite build && electron-builder --linux"
+    "dist": "npm run dist:mac",
+    "dist:mac": "npm run check && electron-builder --mac --arm64"
   },
   "dependencies": {
     "@milkdown/kit": "^7.19.2",

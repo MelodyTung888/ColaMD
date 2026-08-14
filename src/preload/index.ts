@@ -6,10 +6,67 @@ export interface SiblingFile {
   kind: 'file' | 'directory' | 'parent'
 }
 
+export interface TreeEntry {
+  name: string
+  path: string
+  kind: 'file' | 'directory'
+}
+
+export interface DirectorySnapshot {
+  rootPath: string
+  directoryPath: string
+  entries: TreeEntry[]
+}
+
+export type TreeEntryKind = TreeEntry['kind']
+export type TreeContextTargetKind = TreeEntryKind | 'root'
+export type TreeContextCommandName =
+  | 'create-file'
+  | 'create-directory'
+  | 'duplicate'
+  | 'trash'
+  | 'export-pdf'
+  | 'export-html'
+
+export interface TreeContextTarget {
+  path?: string
+  kind: TreeContextTargetKind
+  parentPath?: string
+}
+
+export interface TreeContextCommand {
+  command: TreeContextCommandName
+  path?: string
+  kind: TreeContextTargetKind
+  parentPath?: string
+}
+
+export interface TreeOperationResult {
+  ok: boolean
+  path?: string
+  snapshot?: DirectorySnapshot
+  error?: string
+}
+
+export interface ExportSnapshot {
+  content: string
+  html: string
+  styles: string
+  bodyClass: string
+}
+
+export interface ExportRenderRequest {
+  requestId: string
+  path?: string
+  content?: string
+}
+
 type FileOpenedData = { path: string | null; content: string }
 
 const pendingFileOpened: FileOpenedData[] = []
 let fileOpenedHandler: ((data: FileOpenedData) => void) | null = null
+const pendingExportRenderRequests: ExportRenderRequest[] = []
+let exportRenderRequestHandler: ((data: ExportRenderRequest) => void) | null = null
 
 // Register this listener as soon as preload starts. The main process can send
 // the initial content before the renderer finishes registering its callbacks.
@@ -21,15 +78,37 @@ ipcRenderer.on('file-opened', (_event, data: FileOpenedData) => {
   }
 })
 
+// Export windows are intentionally short lived. Buffer the request so a fast
+// main-process send cannot race Milkdown/theme initialization in the renderer.
+ipcRenderer.on('export-render-request', (_event, data: ExportRenderRequest) => {
+  if (exportRenderRequestHandler) {
+    exportRenderRequestHandler(data)
+  } else {
+    pendingExportRenderRequests.push(data)
+  }
+})
+
 export interface ElectronAPI {
   openFile: () => Promise<{ path: string; content: string } | null>
   openFilePath: (path: string) => Promise<{ path: string; content: string } | null>
   listSiblings: () => Promise<SiblingFile[] | null>
   openSibling: (path: string) => Promise<boolean>
+  getTreeRoot: () => Promise<TreeOperationResult>
+  chooseTreeRoot: () => Promise<TreeOperationResult>
+  setTreeRoot: (path: string) => Promise<TreeOperationResult>
+  listTreeDirectory: (path: string) => Promise<TreeOperationResult>
+  openTreeFile: (path: string) => Promise<TreeOperationResult>
+  syncTreeWatchers: (paths: string[]) => Promise<TreeOperationResult>
+  showTreeContextMenu: (target: TreeContextTarget) => Promise<TreeOperationResult>
+  createTreeEntry: (request: { parentPath: string; kind: TreeEntryKind; name: string }) => Promise<TreeOperationResult>
+  duplicateTreeFile: (path: string) => Promise<TreeOperationResult>
+  trashTreeEntry: (path: string) => Promise<TreeOperationResult>
+  exportTreeFile: (path: string, format: 'pdf' | 'html') => Promise<TreeOperationResult>
+  setDocumentDirty: (dirty: boolean) => Promise<TreeOperationResult>
   saveFile: (content: string) => Promise<string | null>
   saveFileAs: (content: string) => Promise<string | null>
   exportPDF: () => Promise<boolean>
-  exportHTML: (snapshot: { content: string; html: string; styles: string; bodyClass: string }) => Promise<boolean>
+  exportHTML: (snapshot: ExportSnapshot) => Promise<boolean>
   loadCustomTheme: () => Promise<{ name: string; css: string } | null>
   loadThemeCSS: (fileName: string) => Promise<string | null>
   getPathForFile: (file: File) => string
@@ -49,6 +128,12 @@ export interface ElectronAPI {
   onSearch: (callback: () => void) => void
   onMathModal: (callback: () => void) => void
   onSiblingsChanged: (callback: (files: SiblingFile[]) => void) => void
+  onTreeDirectoryChanged: (callback: (data: { path: string }) => void) => void
+  onTreeRootChanged: (callback: (data: { path: string | null; snapshot?: DirectorySnapshot }) => void) => void
+  onTreeContextCommand: (callback: (command: TreeContextCommand) => void) => void
+  onFileDetached: (callback: (data: { path: string }) => void) => void
+  onExportRenderRequest: (callback: (request: ExportRenderRequest) => void) => void
+  sendExportRenderReady: (requestId: string, snapshot: ExportSnapshot) => void
   onToggleFilePanel: (callback: () => void) => void
   onUpdateAvailable: (callback: (version: string) => void) => void
   onUpdateDownloaded: (callback: (version: string) => void) => void
@@ -61,10 +146,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFilePath: (path: string) => ipcRenderer.invoke('open-file-path', path),
   listSiblings: () => ipcRenderer.invoke('list-siblings'),
   openSibling: (path: string) => ipcRenderer.invoke('open-sibling', path),
+  getTreeRoot: () => ipcRenderer.invoke('get-tree-root'),
+  chooseTreeRoot: () => ipcRenderer.invoke('choose-tree-root'),
+  setTreeRoot: (path: string) => ipcRenderer.invoke('set-tree-root', path),
+  listTreeDirectory: (path: string) => ipcRenderer.invoke('list-tree-directory', path),
+  openTreeFile: (path: string) => ipcRenderer.invoke('open-tree-file', path),
+  syncTreeWatchers: (paths: string[]) => ipcRenderer.invoke('sync-tree-watchers', paths),
+  showTreeContextMenu: (target: TreeContextTarget) => ipcRenderer.invoke('show-tree-context-menu', target),
+  createTreeEntry: (request: { parentPath: string; kind: TreeEntryKind; name: string }) => ipcRenderer.invoke('create-tree-entry', request),
+  duplicateTreeFile: (path: string) => ipcRenderer.invoke('duplicate-tree-file', path),
+  trashTreeEntry: (path: string) => ipcRenderer.invoke('trash-tree-entry', path),
+  exportTreeFile: (path: string, format: 'pdf' | 'html') => ipcRenderer.invoke('export-tree-file', { path, format }),
+  setDocumentDirty: (dirty: boolean) => ipcRenderer.invoke('set-document-dirty', dirty),
   saveFile: (content: string) => ipcRenderer.invoke('save-file', content),
   saveFileAs: (content: string) => ipcRenderer.invoke('save-file-as', content),
   exportPDF: () => ipcRenderer.invoke('export-pdf'),
-  exportHTML: (snapshot: { content: string; html: string; styles: string; bodyClass: string }) => ipcRenderer.invoke('export-html', snapshot),
+  exportHTML: (snapshot: ExportSnapshot) => ipcRenderer.invoke('export-html', snapshot),
   loadCustomTheme: () => ipcRenderer.invoke('load-custom-theme'),
   loadThemeCSS: (fileName: string) => ipcRenderer.invoke('load-theme-css', fileName),
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
@@ -114,6 +211,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   onSiblingsChanged: (callback: (files: SiblingFile[]) => void) => {
     ipcRenderer.on('siblings-changed', (_event, files) => callback(files))
+  },
+  onTreeDirectoryChanged: (callback: (data: { path: string }) => void) => {
+    ipcRenderer.on('tree-directory-changed', (_event, data) => callback(data))
+  },
+  onTreeRootChanged: (callback: (data: { path: string | null; snapshot?: DirectorySnapshot }) => void) => {
+    ipcRenderer.on('tree-root-changed', (_event, data) => callback(data))
+  },
+  onTreeContextCommand: (callback: (command: TreeContextCommand) => void) => {
+    ipcRenderer.on('tree-context-command', (_event, command) => callback(command))
+  },
+  onFileDetached: (callback: (data: { path: string }) => void) => {
+    ipcRenderer.on('file-detached', (_event, data) => callback(data))
+  },
+  onExportRenderRequest: (callback: (request: ExportRenderRequest) => void) => {
+    exportRenderRequestHandler = callback
+    for (const request of pendingExportRenderRequests.splice(0)) callback(request)
+  },
+  sendExportRenderReady: (requestId: string, snapshot: ExportSnapshot) => {
+    ipcRenderer.send('export-render-ready', { requestId, snapshot })
   },
   onToggleFilePanel: (callback: () => void) => {
     ipcRenderer.on('toggle-file-panel', () => callback())

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,8 +51,26 @@
     </button>
   </div>
   <aside id="file-panel" hidden>
-    <div class="file-panel-header">文件</div>
-    <ul id="file-list"></ul>
+    <div class="file-panel-header">
+      <span>文件</span>
+      <div class="file-panel-actions">
+        <button id="file-root-up" type="button" aria-label="将侧栏根目录切换到上一级" title="上一级">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M3 8.5 8 3.5l5 5"/>
+            <path d="M8 4v8.5"/>
+          </svg>
+        </button>
+        <button id="file-root-choose" type="button" aria-label="选择侧栏根目录" title="选择根目录">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M2.5 5h4l1.5 1.5h5.5v6H2.5z"/>
+            <path d="M2.5 5V3.5h4L8 5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="file-tree-root-label" class="file-tree-root-label">未选择文件夹</div>
+    <ul id="file-list" class="file-tree"></ul>
+    <div id="file-tree-status" class="file-tree-status" role="status" aria-live="polite" hidden></div>
   </aside>
   <div id="editor"></div>
   <textarea id="source-editor" spellcheck="false"></textarea>

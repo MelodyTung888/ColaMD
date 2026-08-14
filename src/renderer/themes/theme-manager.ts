@@ -45,5 +45,5 @@ export function applyTheme(name: string, customCSS?: string): void {
 
 export function loadSavedTheme(): string {
   const saved = localStorage.getItem('colamd-theme')
-  return saved && themes[saved] ? saved : 'elegant'
+  return saved && (themes[saved] || saved.startsWith('custom:')) ? saved : 'elegant'
 }

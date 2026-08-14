@@ -1,8 +1,23 @@
-# ColaMD Changelog
+# ColaMD Melody Changelog
 
 欢迎来到 ColaMD 的**可玩 changelog**。左侧面板列出的就是本目录的文件——点击切换，每个文件演示一组功能。这是演示副本，玩坏了随时可以从仓库恢复。
 
 ---
+
+## v1.9.0 · Melody 独立版（开发中，尚未发布）
+
+- **macOS 独立身份**：应用名改为 ColaMD Melody，使用独立 Bundle ID、GitHub Release 与更新源，只构建 Apple Silicon（arm64）版本
+- **更易拖动的滚动条**：加宽编辑器右侧纵向滚动条的鼠标命中区域
+- **层级文件树**：文件夹在原位置展开/收起，可连续查看多层目录，不再进入后替换整张列表
+- **轻量加载**：每个窗口只有一个会话级树根，只读取和监听根目录及已展开分支，不建立持久化 Vault，也不全量扫描磁盘
+- **访达式右键操作**：新建 Markdown、新建文件夹、创建文件副本，以及将文件或文件夹移到废纸篓
+- **目标文件导出**：右击 Markdown 文件即可导出 PDF 或 HTML；导出其他文件不会切换或污染当前文档
+
+展开左侧的 `file-tree-demo`，可以直接体验多层文件夹的原地展开方式。右键菜单会依据空白处、文件夹或 Markdown 文件显示相应操作。
+
+## v1.8.2 · 内置主题
+
+- 新增 12 个内置主题，包含 6 个浅色主题与 6 个深色主题
 
 ## v1.8.1 · 启动体验与 macOS 图标视觉刷新
 
@@ -50,7 +65,7 @@
 
 ## 更早
 
-v1.6.x — 可勾选的待办列表、`==高亮==` 语法、Markdown 语法速查、实时同步加固。详见 [GitHub Releases](https://github.com/marswaveai/colamd/releases)。
+v1.6.x — 可勾选的待办列表、`==高亮==` 语法、Markdown 语法速查、实时同步加固。历史版本详见[原版 ColaMD Releases](https://github.com/marswaveai/ColaMD/releases)。
 
 ---
 
@@ -60,6 +75,7 @@ v1.6.x — 可勾选的待办列表、`==高亮==` 语法、Markdown 语法速�
 | --- | --- | --- |
 | [tasks.md](tasks.md) | 待办列表 | 点击 checkbox / **⌘+Enter** |
 | [agent-sim.md](agent-sim.md) | Agent 实时同步 | 外部写入自动刷新 |
+| [file-tree-demo/README.md](file-tree-demo/README.md) | 层级文件树 | 展开目录，继续打开 `level-one/level-two` |
 
 ## 模拟 Agent
 

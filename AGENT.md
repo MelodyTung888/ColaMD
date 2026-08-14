@@ -1,4 +1,6 @@
-# ColaMD
+# ColaMD Melody
+
+这是 Melody 独立维护的 macOS Apple Silicon 版本。`main` 是唯一长期主线；官方 `marswaveai/ColaMD` 只作为只读上游，在 Melody 明确要求核查时比较，并在她逐项批准后选择性移植。不得自动合并、自动同步或向上游提交 PR。详细流程见 [docs/upstream-sync.md](docs/upstream-sync.md)。
 
 ## 产品定位
 
@@ -14,7 +16,7 @@ HTML 难改——结构、样式、内容全混在一起，人改麻烦，Agent 
 
 - **内容层**：`.md` 文件，字段固定，人和 Agent 都能轻松编辑
 - **模板层**：各种 HTML 模板（PPT、游戏化界面、博客、简历、产品落地页……）
-- **ColaMD**：连接两者的工具，也是这个生态的入口
+- **ColaMD Melody**：连接两者的工具，也是这个生态的入口
 
 一份 markdown，多种渲染形态。未来第三方可以基于同一份 markdown 做自己的模板。
 
@@ -34,7 +36,7 @@ Markdown 不只是文档，而是**结构化内容的数据源**。
 这是 ColaMD 的第一原则。每增加一个 UI 元素、一个功能、一行代码，都要问：这是绝对必要的吗？默认答案是否。
 
 - 不要工具栏（用户会用快捷键和 Markdown 语法）
-- 不要常驻侧边栏（打开文件时显示所在目录；无文件时默认显示文稿目录，可 ⌘⇧B 隐藏）
+- 不要强制常驻侧边栏（打开文件时显示单根层级文件树，可用 ⌘⇧B 隐藏）
 - 不要状态栏
 - 界面只有：标题栏（拖拽用）+ 编辑器 + 文件列表面板
 - 追求极致的简单，一个功能做到极致
@@ -43,7 +45,7 @@ Markdown 不只是文档，而是**结构化内容的数据源**。
 
 1. **文件热更新**（核心卖点）— 外部 Agent 修改 .md 时自动刷新，实时看到 Agent 的工作
 2. **所见即所得** — 输入 Markdown 即刻渲染为富文本
-3. **文件列表面板** — 打开文件时显示所在目录的 Markdown 文件；无文件时默认显示文稿目录；支持轻量目录浏览、点击切换，Agent 新建/删除文件实时刷新
+3. **层级文件树** — 单击文件夹原地展开/收起；使用单一、会话级根目录，按展开状态懒加载和监听；支持右键新建、移到废纸篓、创建文件副本和导出目标文件
 4. **主题系统** — CSS 主题，可导入自定义主题
 5. **导出** — PDF、HTML
 
@@ -61,18 +63,33 @@ Markdown 不只是文档，而是**结构化内容的数据源**。
 - 每个大版本更新后：在 `resources/demo/changelog.md` **追加**本版更新内容，并更新对应的演示文件（Help 菜单 → 新功能演示，⌘⇧D）
 - 演示目录是**可玩的 changelog**：changelog.md 记录更新历史，同目录的演示文件让用户上手玩，而不是只读文字
 - 演示页已接入菜单，打包时随 extraResources 发布
+- 只构建 macOS arm64；产品名为 `ColaMD Melody`，Bundle ID 为 `com.melody.colamd`，Release 与更新源只指向 `MelodyTung888/ColaMD`
+- 发布前必须通过 `npm run check`、签名、Notarization 和安装后实机验证；仅有构建产物不等于已发布
+- Release workflow 只引用 GitHub Secrets `CSC_LINK`、`CSC_KEY_PASSWORD`、`APPLE_ID`、`APPLE_APP_SPECIFIC_PASSWORD`、`APPLE_TEAM_ID`；仓库和文档不得保存它们的值。Secrets 未配置时 workflow 应明确失败，不得降级发布未签名包
+- 未经 Melody 明确批准，不得 push、打 tag、创建 GitHub Release 或代表她对外发布
+
+### 文件树边界
+
+- 每个窗口同一时间只有一个树根；树根和展开状态仅属于当前应用会话，不落盘为 Workspace/Vault。
+- 窗口尚无根时，以首次打开文件所在目录作为会话根；打开根内深层文件不改变树根。用户主动选择新根，或从系统打开根外文件时，才替换当前根；不维护多根集合。
+- 初始化只读取根目录的直接子项；展开文件夹时才读取并监听该文件夹，收起后停止不必要的深层监听。
+- 单击文件夹只展开/收起，不再把侧栏导航成该文件夹的单层列表；打开深层文件后保持当前树结构并高亮目标。
+- 目录变化只刷新受影响的已加载分支，不递归扫描整个磁盘。
+- 文件系统写操作只在主进程执行。新建不得覆盖同名项；删除使用 macOS 废纸篓；文件副本使用不冲突的同目录名称。
+- 右键导出必须以被点击的 Markdown 文件为目标；不得在后台切换或污染当前文档、未保存状态、滚动位置与树状态。
 
 ### 不做的事情
 
-- 不做持久化工作区和全量文件树（只提供当前目录与默认文稿目录的轻量浏览）
+- 不做持久化 Workspace/Vault、多根工作区或启动时全量递归扫描
 - 不做知识库管理
 - 不做云同步、协作编辑
 - 不做笔记组织和标签系统
 - 不加不必要的 UI 元素（工具栏、状态栏等）
+- Melody 版不构建、不发布、不承诺支持 Windows、Linux 或 Intel Mac
 
 ## 技术栈
 
-- Electron（桌面跨平台）
+- Electron（macOS Apple Silicon 桌面应用）
 - Milkdown（基于 ProseMirror 的 WYSIWYG Markdown 框架）
 - TypeScript 严格模式
 - electron-vite（构建）
@@ -102,3 +119,4 @@ src/
 - 代码简洁，不过度设计
 - 每个新功能先问：这是必要的吗？
 - UI、图标、间距和交互规范详见 [design.md](design.md)，所有参与者提交界面改动前都应检查贡献清单。
+- 本地验收至少运行 `npm run typecheck`、`npm run build` 和 `git diff --check`；`npm run check` 汇总前两项。

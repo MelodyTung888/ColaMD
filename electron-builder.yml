@@ -1,6 +1,7 @@
-appId: ai.marswave.colamd
-productName: ColaMD
-copyright: Copyright © 2024-2026 marswave.ai
+appId: com.melody.colamd
+productName: ColaMD Melody
+copyright: Copyright © 2024-2026 marswave.ai and ColaMD Melody contributors
+artifactName: ColaMD-Melody-${version}-mac-${arch}.${ext}
 
 directories:
   output: release
@@ -36,8 +37,12 @@ fileAssociations:
 
 mac:
   target:
-    - dmg
-    - zip
+    - target: dmg
+      arch:
+        - arm64
+    - target: zip
+      arch:
+        - arm64
   category: public.app-category.productivity
   icon: resources/icon.icns
   hardenedRuntime: true
@@ -46,23 +51,7 @@ mac:
   entitlementsInherit: resources/entitlements.mac.plist
   notarize: true
 
-win:
-  target:
-    - nsis
-  icon: resources/icon.png
-
-linux:
-  target:
-    - AppImage
-    - deb
-  category: Office
-  icon: resources/icon.png
-
-nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
-
 publish:
   provider: github
-  owner: marswaveai
+  owner: MelodyTung888
   repo: ColaMD
